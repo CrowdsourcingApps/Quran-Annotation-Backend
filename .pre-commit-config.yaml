@@ -4,11 +4,13 @@ repos:
     hooks:
       - id: autopep8
         args: ["--in-place", "--max-line-length", "100"]
+        exclude: ^alembic/
 
   - repo: https://github.com/pycqa/isort
     rev: 5.8.0
     hooks:
       - id: isort
+        exclude: ^alembic/
 
   - repo: https://github.com/pycqa/flake8
     rev: 3.9.2
@@ -20,3 +22,4 @@ repos:
             "flake8-print==4.0.0",
             "flake8-logging-format==0.6.0",
           ]
+        exclude: ^alembic/

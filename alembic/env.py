@@ -1,9 +1,13 @@
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from src.models import Base
+from src.models.task import Task
+from src.models.user import User
+from src.models.validate_correctness_ct import ValidateCorrectnessControlTask
+from src.models.validate_correctness_ct_user import ValidateCorrectnessCTUser
 from src.settings import settings
 
 # this is the Alembic Config object, which provides
