@@ -4,6 +4,7 @@ import time
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from src.database import init_db
 from src.routes import init_api
 from src.settings.logging import logger
 
@@ -39,3 +40,4 @@ app.add_middleware(
 
 
 init_api(app)
+init_db(app)
