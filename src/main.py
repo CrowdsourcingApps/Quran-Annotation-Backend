@@ -4,19 +4,11 @@ import time
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-# from src.routes import init_api
+from src.database import init_db
+from src.routes import init_api
 from src.settings.logging import logger
 
-# from src.models import create_tables
-
 app = FastAPI()
-
-# create_tables()
-
-
-@app.get('/')
-async def root():
-    return {'message': 'Hello World'}
 
 
 @app.middleware('http')
@@ -47,4 +39,5 @@ app.add_middleware(
 )
 
 
-# init_api(app)
+init_api(app)
+init_db(app)
