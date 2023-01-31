@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
-from src.routes.auth.schema import Token, UserInSchema
+from src.routes.auth.schema import Token, UserInSchema, UserOutSchema
 
 router = APIRouter()
 
@@ -51,3 +51,13 @@ async def login_for_access_token(
     access_token = auth_helper.create_access_token(authorized_user.email)
     refresh_token = auth_helper.create_refresh_token(authorized_user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.get(
+    '/me',
+    response_model=UserOutSchema,
+    status_code=200,
+    responses={401: {'description': 'UNAUTHORIZED'}},
+)
+async def read_users_me(user=Depends(handler.get_current_user)):
+    return await UserOutSchema.from_tortoise_orm(user)

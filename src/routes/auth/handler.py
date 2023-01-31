@@ -8,21 +8,21 @@ from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import UserInSchema
 
 
-def get_user_by_id(user_id: int) -> User:
-    return User.get_or_none(id=user_id)
+async def get_user_by_id(user_id: int) -> User:
+    return await User.get_or_none(id=user_id)
 
 
-def get_user_by_email(email: str) -> User:
-    return User.get_or_none(email=email)
+async def get_user_by_email(email: str) -> User:
+    return await User.get_or_none(email=email)
 
 
-def get_current_user(token: str = Depends(auth_helper.oauth2_scheme)
-                     ) -> User:
+async def get_current_user(token: str = Depends(auth_helper.oauth2_scheme)
+                           ) -> User:
     try:
         user_email = auth_helper.decode_token(token)
     except JWTError:
         return None
-    user = get_user_by_email(user_email)
+    user = await get_user_by_email(user_email)
     if user is None:
         raise None
     return user

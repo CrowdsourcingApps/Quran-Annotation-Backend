@@ -1,7 +1,9 @@
-from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel
+from tortoise.contrib.pydantic import pydantic_model_creator
+
+from src.models import User
 
 
 class Token(BaseModel):
@@ -23,11 +25,9 @@ class UserUpdateSchema(BaseModel):
 VALIDATE_CORRECTNESS_THRESHOLD = 0.7
 
 
-class UserOutSchema(UserUpdateSchema):
-    id: str
-    user_role: UserRoleEnum = UserRoleEnum.Annotator
-    create_date: datetime = datetime.now()
-    validate_correctness_exam_correct_no: int = 0
+UserOutSchema = pydantic_model_creator(User, name='User',
+                                       exclude=['hashed_password',
+                                                'validate_correctness_cts'])
 
 
 class UserInSchema(BaseModel):
