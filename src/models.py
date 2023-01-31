@@ -43,11 +43,11 @@ class User(Model):
         description='Number of correct answers in the entrance exam'
                     ' of validate correctness task type')
     validate_correctness_cts = fields.ManyToManyField(
-        'models.ValidateCorrectnessControlTask',
+        'models.ValidateCorrectnessCT',
         through='validate_correctness_ct_user')
 
 
-class ValidateCorrectnessControlTask(Model):
+class ValidateCorrectnessCT(Model):
     surra_number = fields.IntField()
     aya_number = fields.IntField()
     audio_file_name = fields.CharField(max_length=128, unique=True)
@@ -56,10 +56,15 @@ class ValidateCorrectnessControlTask(Model):
     golden = fields.BooleanField(default=False)
     label = fields.CharEnumField(LabelEnum)
 
+    class Meta:
+        table = 'validate_correctness_ct'
+        description = ('The model is for controle tasks that'
+                       ' have validate correctness type')
+
 
 class ValidateCorrectnessCTUser(Model):
-    validate_correctness_ct = fields.ForeignKeyField(
-        'models.ValidateCorrectnessControlTask')
+    validatecorrectnessct = fields.ForeignKeyField(
+        'models.ValidateCorrectnessCT')
     user = fields.ForeignKeyField('models.User')
     test = fields.BooleanField(default=False,
                                description='Indicate if the answer is given'
@@ -70,4 +75,4 @@ class ValidateCorrectnessCTUser(Model):
 
     class Meta:
         table = 'validate_correctness_ct_user'
-        unique_together = ['validate_correctness_ct', 'user']
+        unique_together = ['validatecorrectnessct', 'user']

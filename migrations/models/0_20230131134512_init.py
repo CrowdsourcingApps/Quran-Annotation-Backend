@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 COMMENT ON COLUMN "user"."user_role" IS 'Admin: admin\nRecitingApp: reciting_app\nAnnotator: annotator';
 COMMENT ON COLUMN "user"."validate_correctness_exam_correct_no" IS 'Number of correct answers in the entrance exam of validate correctness task type';
-CREATE TABLE IF NOT EXISTS "validatecorrectnesscontroltask" (
+CREATE TABLE IF NOT EXISTS "validate_correctness_ct" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "surra_number" INT NOT NULL,
     "aya_number" INT NOT NULL,
@@ -38,16 +38,16 @@ CREATE TABLE IF NOT EXISTS "validatecorrectnesscontroltask" (
     "golden" BOOL NOT NULL  DEFAULT False,
     "label" VARCHAR(17) NOT NULL
 );
-COMMENT ON COLUMN "validatecorrectnesscontroltask"."duration_ms" IS 'length of the audio file in ms';
-COMMENT ON COLUMN "validatecorrectnesscontroltask"."label" IS 'Correct: correct\nInCorrect: in_correct\nNotRelatedToQuran: not_related_quran\nNotMatchAya: not_match_aya\nMultipleAya: multiple_aya';
+COMMENT ON COLUMN "validate_correctness_ct"."duration_ms" IS 'length of the audio file in ms';
+COMMENT ON COLUMN "validate_correctness_ct"."label" IS 'Correct: correct\nInCorrect: in_correct\nNotRelatedToQuran: not_related_quran\nNotMatchAya: not_match_aya\nMultipleAya: multiple_aya';
 CREATE TABLE IF NOT EXISTS "validate_correctness_ct_user" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "test" BOOL NOT NULL  DEFAULT False,
     "label" VARCHAR(17) NOT NULL,
     "create_date" DATE NOT NULL,
     "user_id" INT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE,
-    "validate_correctness_ct_id" INT NOT NULL REFERENCES "validatecorrectnesscontroltask" ("id") ON DELETE CASCADE,
-    CONSTRAINT "uid_validate_co_validat_e9a4e9" UNIQUE ("validate_correctness_ct_id", "user_id")
+    "validatecorrectnessct_id" INT NOT NULL REFERENCES "validate_correctness_ct" ("id") ON DELETE CASCADE,
+    CONSTRAINT "uid_validate_co_validat_6a28a8" UNIQUE ("validatecorrectnessct_id", "user_id")
 );
 COMMENT ON COLUMN "validate_correctness_ct_user"."test" IS 'Indicate if the answer is given for an entrance test or for  quality control';
 COMMENT ON COLUMN "validate_correctness_ct_user"."label" IS 'Correct: correct\nInCorrect: in_correct\nNotRelatedToQuran: not_related_quran\nNotMatchAya: not_match_aya\nMultipleAya: multiple_aya';
