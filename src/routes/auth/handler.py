@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from jose import JWTError
 
 from src.models import User
@@ -21,10 +21,17 @@ async def get_current_user(token: str = Depends(auth_helper.oauth2_scheme)
     try:
         user_email = auth_helper.decode_token(token)
     except JWTError:
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
     user = await get_user_by_email(user_email)
     if user is None:
-        raise None
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Could not find user',
+        )
     return user
 
 
