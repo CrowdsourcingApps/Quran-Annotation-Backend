@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import Token, UserInSchema, UserOutSchema
+from src.settings.logging import logger
 
 router = APIRouter()
 
@@ -61,3 +62,37 @@ async def login_for_access_token(
 )
 async def read_users_me(user=Depends(handler.get_current_user)):
     return await UserOutSchema.from_tortoise_orm(user)
+
+
+@router.post(
+    '/token/refresh',
+    response_model=Token,
+    status_code=200,
+    responses={401: {'description': 'UNAUTHORIZED'}},
+)
+async def refresh(refresh_token: str = Depends(auth_helper.oauth2_scheme)):
+    try:
+        useremail: str = auth_helper.decode_token(refresh_token)
+        user = await handler.get_user_by_email(useremail)
+        if user:
+            # Create and return token
+            access_token = auth_helper.create_access_token(useremail)
+            refresh_token = auth_helper.create_refresh_token(useremail)
+            return {
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'token_type': 'bearer',
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Could not validate credentials',
+                headers={'WWW-Authenticate': 'Bearer'},
+            )
+    except Exception as ex:
+        logger.exception(f'[token] - Decoding error: {ex}')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
