@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from src.models import ValidateCorrectnessCT
+from src.models import User, ValidateCorrectnessCT
 from src.routes.control_tasks.schema import CreationError
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTInSchema
@@ -39,3 +39,24 @@ async def Add_validate_correctness_control_tasks_list(
                                   audio=control_task.audio_file_name)
             errors.append(error)
     return errors
+
+
+async def get_previous_solved_questions(user: User) -> List[int]:
+    """ get ids list of validate correctness solved questions for entarance
+        exam"""
+    ids = await user.validate_correctness_cts.filter(
+        validate_correctness_ct_users__test=True
+    ).only('id').all()
+    return ids
+
+
+async def get_validate_correctness_list(
+    golden: bool,
+    skip_ids: List[int]
+) -> List[ValidateCorrectnessCT]:
+    """ get list of validate correctness control tasks"""
+    vcct = await ValidateCorrectnessCT.filter(
+        golden=golden,
+        id__not_in=skip_ids
+    ).all()
+    return vcct
