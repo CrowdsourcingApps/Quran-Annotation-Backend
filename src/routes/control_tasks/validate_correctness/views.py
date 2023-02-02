@@ -14,13 +14,13 @@ from src.routes.control_tasks.validate_correctness.schema import (
     ValidateCorrectnessCTInSchema, ValidateCorrectnessCTOutSchema,
     ValidateCorrectnessExamAnswers)
 
-router = APIRouter()
+router = APIRouter(prefix='/validate_correctness')
 ENTRANCE_EXAM_NO = 7
 ALLOWED_ATTEMPTS = 5
 VALIDATE_CORRECTNESS_THRESHOLD = 0.7
 
 
-@router.post('/validate_correctness',
+@router.post('/',
              status_code=200,
              response_model=CreateResponse,
              responses={401: {'description': 'UNAUTHORIZED'},
@@ -50,7 +50,7 @@ async def add_validate_correctness_control_tasks(
         )
 
 
-@router.get('/validate_correctness',
+@router.get('/',
             response_model=List[ValidateCorrectnessCTOutSchema],
             status_code=200,
             responses={401: {'description': 'UNAUTHORIZED'},
@@ -98,7 +98,7 @@ async def get_validate_correctness_entrance_exam(
     return control_tasks
 
 
-@router.post('/validate_correctness/answers',
+@router.post('/answers',
              status_code=200,
              response_model=CreateResponse,
              responses={401: {'description': 'UNAUTHORIZED'},
