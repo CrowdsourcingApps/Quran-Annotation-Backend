@@ -1,5 +1,3 @@
-from enum import Enum
-
 from pydantic import BaseModel
 from tortoise.contrib.pydantic import pydantic_model_creator
 
@@ -10,12 +8,6 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = 'bearer'
-
-
-class UserRoleEnum(str, Enum):
-    Admin = 'admin'
-    RecitingApp = 'reciting_app'
-    Annotator = 'annotator'
 
 
 class UserUpdateSchema(BaseModel):

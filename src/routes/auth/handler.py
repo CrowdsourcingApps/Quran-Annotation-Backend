@@ -53,3 +53,12 @@ async def authenticate_user(email: str, password: str):
     if not auth_helper.verify_password(password, user.hashed_password):
         return False
     return user
+
+
+async def update_validate_correctness_exam_correct_no(
+        user_id: int, correct_no: int) -> bool:
+    result = await User.filter(id=user_id).update(
+        validate_correctness_exam_correct_no=correct_no)
+    if result == 0:
+        return False
+    return True
