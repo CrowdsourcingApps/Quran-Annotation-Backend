@@ -76,12 +76,13 @@ class Task(Model):
     aya_number = fields.IntField()
     audio_file_name = fields.CharField(max_length=128, unique=True)
     duration_ms = fields.IntField(description='length of the audio file in ms')
-    create_date = fields.DateField(default=None)
+    create_date = fields.DateField(null=True)
     client_id = fields.CharField(max_length=128,
                                  unique=True,
+                                 null=True,
                                  description='The id of the recitier')
-    final_transcription = fields.TextField()
-    label = fields.CharEnumField(LabelEnum)
+    final_transcription = fields.TextField(null=True)
+    label = fields.CharEnumField(LabelEnum, null=True)
     validated = fields.BooleanField(default=False)
 
 

@@ -127,7 +127,7 @@ async def add_validate_correctness_entrance_exam_answers(
     correct_answers = 0
     errors: List[CreationError] = []
     for exam_answer in exam_answers:
-        task = await handler.get_validate_correctness_control_task(
+        task = await handler.get_validate_correctness_control_task_by_id(
             id=exam_answer.ct_id)
         result = await handler.save_validate_correctness_control_task_answer(
             user, task, exam_answer.label, test=True)

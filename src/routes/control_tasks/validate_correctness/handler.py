@@ -5,12 +5,7 @@ from src.models import (LabelEnum, User, ValidateCorrectnessCT,
 from src.routes.control_tasks.schema import CreationError
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTInSchema
-from src.settings import settings
 from src.settings.logging import logger
-
-TEST_BUCKET_PATH = (
-    settings.MINIO_SERVER+'/'+settings.MINIO_TEST_TASKS_BUCKET+'/'
-)
 
 
 async def create_vcct(vcct: ValidateCorrectnessCTInSchema
@@ -43,11 +38,8 @@ async def Add_validate_correctness_control_tasks_list(
 
 
 async def get_previous_solved_questions(user: User) -> List[int]:
-    """ get ids list of validate correctness solved questions for entarance
-        exam"""
-    ids = await user.validate_correctness_cts.filter(
-        validate_correctness_ct_users__test=True
-    ).only('id').all()
+    """ get ids list of validate correctness solved questions"""
+    ids = await user.validate_correctness_cts.filter().only('id').all()
     return ids
 
 
@@ -63,10 +55,20 @@ async def get_validate_correctness_list(
     return vcct
 
 
-async def get_validate_correctness_control_task(
+async def get_validate_correctness_control_task_by_id(
         id: int) -> ValidateCorrectnessCT:
     """ get validate correctness control task"""
     vcct = await ValidateCorrectnessCT.get(id=id)
+    return vcct
+
+
+async def get_validate_correctness_control_task(
+        golden: bool, skip_ids: List[int]) -> ValidateCorrectnessCT:
+    """ get validate correctness control task"""
+    vcct = await ValidateCorrectnessCT.filter(
+        golden=golden,
+        id__not_in=skip_ids
+    ).first()
     return vcct
 
 
