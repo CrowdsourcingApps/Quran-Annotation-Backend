@@ -1,6 +1,7 @@
 from typing import List, Union
 
-from src.models import User, ValidateCorrectnessCT
+from src.models import (LabelEnum, User, ValidateCorrectnessCT,
+                        ValidateCorrectnessCTUser)
 from src.routes.control_tasks.schema import CreationError
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTInSchema
@@ -36,7 +37,7 @@ async def Add_validate_correctness_control_tasks_list(
         result = await create_vcct(control_task)
         if isinstance(result, str):
             error = CreationError(message=result,
-                                  audio=control_task.audio_file_name)
+                                  item=control_task.audio_file_name)
             errors.append(error)
     return errors
 
@@ -60,3 +61,28 @@ async def get_validate_correctness_list(
         id__not_in=skip_ids
     ).all()
     return vcct
+
+
+async def get_validate_correctness_control_task(
+        id: int) -> ValidateCorrectnessCT:
+    """ get validate correctness control task"""
+    vcct = await ValidateCorrectnessCT.get(id=id)
+    return vcct
+
+
+async def save_validate_correctness_control_task_answer(
+    user: User, task: ValidateCorrectnessCT, answer: LabelEnum, test: bool
+) -> Union[ValidateCorrectnessCT, str]:
+    """ save the answer of validate correctness control task"""
+    try:
+        vctu = await ValidateCorrectnessCTUser.create(
+            user=user,
+            validatecorrectnessct=task,
+            label=answer,
+            test=test)
+        return vctu
+    except Exception as ex:
+        logger.exception('[db] - Add new ValidateCorrectnessCTUser'
+                         f'item error: {ex}')
+        error_message = str(ex)
+        return error_message

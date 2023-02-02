@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class CreationError(BaseModel):
-    audio: str
+    item: str
     message: str
 
 

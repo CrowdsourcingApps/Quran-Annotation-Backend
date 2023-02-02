@@ -30,12 +30,12 @@ async def get_validate_correctness_entrance_exam_list(
         ct_type5 = [item for item in golden_tasks
                     if item.label == LabelEnum.NotRelatedToQuran]
         test_questions = []
-        test_questions += random.choices(ct_type1, k=2)
-        test_questions += random.choices(ct_type2, k=2)
-        test_questions += random.choices(ct_type3, k=1)
-        test_questions += random.choices(ct_type4, k=1)
-        test_questions += random.choices(ct_type5, k=1)
-        test_questions = random.shuffle(test_questions)
+        test_questions += random.sample(ct_type1, k=2)
+        test_questions += random.sample(ct_type2, k=2)
+        test_questions += random.sample(ct_type3, k=1)
+        test_questions += random.sample(ct_type4, k=1)
+        test_questions += random.sample(ct_type5, k=1)
+        random.shuffle(test_questions)
         try:
             # add the whole path for the file name
             for i, obj in enumerate(test_questions):
