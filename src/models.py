@@ -64,6 +64,7 @@ class ValidateCorrectnessCTUser(Model):
                                            ' for an entrance test or for'
                                            '  quality control')
     label = fields.CharEnumField(LabelEnum)
+    correct_answer = fields.BooleanField(default=True)
     create_date = fields.DateField(default=datetime.utcnow)
 
     class Meta:

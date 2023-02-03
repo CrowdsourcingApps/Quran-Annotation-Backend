@@ -125,18 +125,22 @@ async def add_validate_correctness_entrance_exam_answers(
         )
     # calculate number of correct
     correct_answers = 0
+    correct = False
     errors: List[CreationError] = []
     for exam_answer in exam_answers:
         task = await handler.get_validate_correctness_control_task_by_id(
             id=exam_answer.ct_id)
+        if task.label == exam_answer.label:
+            correct_answers += 1
+            correct = True
+        else:
+            correct = False
         result = await handler.save_validate_correctness_control_task_answer(
-            user, task, exam_answer.label, test=True)
+            user, task, exam_answer.label, test=True, correct=correct)
         if isinstance(result, str):
             error = CreationError(message=result,
                                   item=exam_answer.ct_id)
             errors.append(error)
-        if task.label == exam_answer.label:
-            correct_answers += 1
     user_accuracy = correct_answers/ENTRANCE_EXAM_NO
     # update user data for accuracy if the user pass the test
     if len(errors) == 0 and user_accuracy >= VALIDATE_CORRECTNESS_THRESHOLD:

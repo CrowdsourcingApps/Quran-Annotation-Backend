@@ -73,15 +73,19 @@ async def get_validate_correctness_control_task(
 
 
 async def save_validate_correctness_control_task_answer(
-    user: User, task: ValidateCorrectnessCT, answer: LabelEnum, test: bool
-) -> Union[ValidateCorrectnessCT, str]:
+        user: User,
+        task: ValidateCorrectnessCT,
+        answer: LabelEnum,
+        test: bool,
+        correct: bool) -> Union[ValidateCorrectnessCT, str]:
     """ save the answer of validate correctness control task"""
     try:
         vctu = await ValidateCorrectnessCTUser.create(
             user=user,
             validatecorrectnessct=task,
             label=answer,
-            test=test)
+            test=test,
+            correct_answer=correct)
         return vctu
     except Exception as ex:
         logger.exception('[db] - Add new ValidateCorrectnessCTUser'

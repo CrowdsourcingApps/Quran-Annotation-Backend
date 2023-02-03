@@ -9,10 +9,10 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "aya_number" INT NOT NULL,
     "audio_file_name" VARCHAR(128) NOT NULL UNIQUE,
     "duration_ms" INT NOT NULL,
-    "create_date" DATE NULL,
-    "client_id" VARCHAR(128) NULL UNIQUE,
-    "final_transcription" TEXT NULL,
-    "label" VARCHAR(17) NULL,
+    "create_date" DATE NOT NULL,
+    "client_id" VARCHAR(128) NOT NULL UNIQUE,
+    "final_transcription" TEXT NOT NULL,
+    "label" VARCHAR(17) NOT NULL,
     "validated" BOOL NOT NULL DEFAULT False
 );
 COMMENT ON COLUMN "task"."duration_ms" IS 'length of the audio file in ms';
