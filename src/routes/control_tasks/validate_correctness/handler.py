@@ -2,9 +2,9 @@ from typing import List, Union
 
 from src.models import (LabelEnum, User, ValidateCorrectnessCT,
                         ValidateCorrectnessCTUser)
-from src.routes.control_tasks.schema import CreationError
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTInSchema
+from src.routes.schema import CreationError
 from src.settings.logging import logger
 
 
@@ -77,7 +77,7 @@ async def save_validate_correctness_control_task_answer(
         task: ValidateCorrectnessCT,
         answer: LabelEnum,
         test: bool,
-        correct: bool) -> Union[ValidateCorrectnessCT, str]:
+        correct: bool) -> Union[ValidateCorrectnessCTUser, str]:
     """ save the answer of validate correctness control task"""
     try:
         vctu = await ValidateCorrectnessCTUser.create(

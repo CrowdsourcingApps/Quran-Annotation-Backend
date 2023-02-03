@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Union
 
-from src.models import Task, User
+from src.models import LabelEnum, Task, User, ValidateCorrectnessTUser
+from src.settings.logging import logger
 
 
 async def get_previous_solved_questions(user: User) -> List[int]:
@@ -10,9 +11,9 @@ async def get_previous_solved_questions(user: User) -> List[int]:
 
 
 async def get_validate_correctness_task(
-        id: int) -> Task:
+        id: int) -> Union[Task, None]:
     """ get validate correctness task"""
-    vct = await Task.get(id=id)
+    vct = await Task.get_or_none(id=id)
     return vct
 
 
@@ -22,3 +23,23 @@ async def get_validate_correctness_tasks(
     vcts = await Task.filter(id__not_in=skip_ids,
                              label=None).limit(limit).all()
     return vcts
+
+
+async def store_task_answer(
+        user: User,
+        task: Task,
+        answer: LabelEnum) -> Union[ValidateCorrectnessTUser, str]:
+    """ store the answer of validate correctness task"""
+    try:
+        vctu = await ValidateCorrectnessTUser.create(
+            user=user,
+            task=task,
+            label=answer)
+        # check if the task status is changed and update the
+        # label according to the majority of answers
+        return vctu
+    except Exception as ex:
+        logger.exception('[db] - Add new ValidateCorrectnessTUser'
+                         f'item error: {ex}')
+        error_message = str(ex)
+        return error_message

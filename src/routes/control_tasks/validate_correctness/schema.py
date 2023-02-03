@@ -15,5 +15,5 @@ ValidateCorrectnessCTOutSchema = pydantic_model_creator(
 
 
 class ValidateCorrectnessExamAnswers(BaseModel):
-    ct_id: int
+    id: int
     label: LabelEnum

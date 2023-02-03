@@ -1,11 +1,15 @@
 import random
-from typing import List, Union
+from typing import List, Tuple, Union
 
-from src.models import LabelEnum
-from src.routes.control_tasks.validate_correctness.handler import \
-    get_validate_correctness_list
+from src.models import LabelEnum, User
+from src.routes.control_tasks.validate_correctness.handler import (
+    get_validate_correctness_control_task_by_id, get_validate_correctness_list,
+    save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTOutSchema as VCCTOut
+from src.routes.control_tasks.validate_correctness.schema import \
+    ValidateCorrectnessExamAnswers
+from src.routes.schema import CreationError
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -51,3 +55,32 @@ async def get_validate_correctness_entrance_exam_list(
         logger.exception('[db] - get contol tasks from validate '
                          f'correctness control tasks table error: {ex}')
         return None
+
+
+async def save_validate_control_tasks_list(
+        answers: ValidateCorrectnessExamAnswers,
+        user: User,
+        test: bool) -> Tuple[List[CreationError], int]:
+    correct_answers = 0
+    correct = False
+    errors: List[CreationError] = []
+    for answer in answers:
+        task = await get_validate_correctness_control_task_by_id(
+            id=answer.id)
+        if task is None:
+            error = CreationError(message='control task not found',
+                                  item=task.id)
+            errors.append(error)
+            continue
+        if task.label == answer.label:
+            correct_answers += 1
+            correct = True
+        else:
+            correct = False
+        result = await save_validate_correctness_control_task_answer(
+            user, task, answer.label, test=test, correct=correct)
+        if isinstance(result, str):
+            error = CreationError(message=result,
+                                  item=answer.id)
+            errors.append(error)
+    return errors, correct_answers

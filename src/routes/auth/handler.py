@@ -62,3 +62,14 @@ async def update_validate_correctness_exam_correct_no(
     if result == 0:
         return False
     return True
+
+
+async def update_user_validate_correctness_tasks_no(
+        user: User, num: int) -> bool:
+    old = user.validate_correctness_tasks_no
+    new = old + num
+    result = await User.filter(id=user.id).update(
+        validate_correctness_tasks_no=new)
+    if result == 0:
+        return False
+    return True
