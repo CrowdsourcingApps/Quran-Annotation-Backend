@@ -6,7 +6,6 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
     MINIO_BUCKET_NAME: str
-    MINIO_TEST_TASKS_BUCKET: str
     DB_HOST: str
     DB_USER: str
     DB_PASSWORD: str
@@ -15,3 +14,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = '.env'
+
+    def get_minio_Bucket_url(self):
+        return self.MINIO_SERVER+'/'+self.MINIO_BUCKET_NAME+'/'

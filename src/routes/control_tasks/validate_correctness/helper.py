@@ -9,9 +9,7 @@ from src.routes.control_tasks.validate_correctness.schema import \
 from src.settings import settings
 from src.settings.logging import logger
 
-TEST_BUCKET_PATH = (
-    settings.MINIO_SERVER+'/'+settings.MINIO_TEST_TASKS_BUCKET+'/'
-)
+BUCKET_PATH = settings.get_minio_Bucket_url()
 
 
 async def get_validate_correctness_entrance_exam_list(
@@ -40,7 +38,7 @@ async def get_validate_correctness_entrance_exam_list(
             # add the whole path for the file name
             for i, obj in enumerate(test_questions):
                 test_questions[i].audio_file_name = (
-                    TEST_BUCKET_PATH + obj.audio_file_name
+                    BUCKET_PATH + obj.audio_file_name
                 )
             tasks = [await VCCTOut.from_tortoise_orm(task)
                      for task in test_questions]

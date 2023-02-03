@@ -7,9 +7,7 @@ from src.routes.tasks.validate_correctness.schema import \
     ValidateCorrectnessTOutSchema as VCTOut
 from src.settings import settings
 
-BUCKET_PATH = (
-    settings.MINIO_SERVER+'/'+settings.MINIO_BUCKET_NAME+'/'
-)
+BUCKET_PATH = settings.get_minio_Bucket_url()
 
 
 async def get_validate_correctness_ct(skip_ids: List[int]
