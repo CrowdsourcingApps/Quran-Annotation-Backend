@@ -3,6 +3,7 @@ from typing import List, Tuple, Union
 
 from src.models import LabelEnum, User
 from src.routes.control_tasks.validate_correctness.handler import (
+    get_validate_correctness_control_task_answer,
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
@@ -14,6 +15,7 @@ from src.settings import settings
 from src.settings.logging import logger
 
 BUCKET_PATH = settings.get_minio_Bucket_url()
+ENTRANCE_EXAM_NO = 7
 
 
 async def get_validate_correctness_entrance_exam_list(
@@ -84,3 +86,17 @@ async def save_validate_control_tasks_list(
                                   item=answer.id)
             errors.append(error)
     return errors, correct_answers
+
+
+async def calculate_validate_correctness_accuracy(user: User) -> float:
+    base_correct_answers = user.validate_correctness_exam_correct_no
+    base_all_answers = ENTRANCE_EXAM_NO
+    # get list of validate correctness control tasks that user solved
+    control_tasks = await get_validate_correctness_control_task_answer(
+        user=user)
+    all_answers = base_all_answers + len(control_tasks)
+    correct_answers = [task for task in control_tasks
+                       if task.correct_answer is True]
+    all_correct_answers = base_correct_answers + len(correct_answers)
+    user_accuracy = all_correct_answers / all_answers
+    return user_accuracy

@@ -92,3 +92,14 @@ async def save_validate_correctness_control_task_answer(
                          f'item error: {ex}')
         error_message = str(ex)
         return error_message
+
+
+async def get_validate_correctness_control_task_answer(
+        user: User) -> List[ValidateCorrectnessCTUser]:
+    """ get the answers for validate correctness control task
+        of specific user"""
+    vcctu_list = await ValidateCorrectnessCTUser.filter(
+        user=user,
+        test=False
+    ).all()
+    return vcctu_list

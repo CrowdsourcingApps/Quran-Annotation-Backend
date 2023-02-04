@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -107,6 +108,10 @@ async def add_validate_correctness_entrance_exam_answers(
             error = CreationError(message=result,
                                   item=task.id)
             errors.append(error)
+        else:
+            # check if the task status is changed and update the
+            # label according to the majority of answers
+            asyncio.create_task(helper.check_task_status(task.id))
 
     # # store answer for control task
     # Remove correct_answer property to match input schema of the method
@@ -127,4 +132,3 @@ async def add_validate_correctness_entrance_exam_answers(
                               message='Data was uploaded successfully.')
     return CreateResponse(errors=errors,
                           message='Data was not uploaded successfully.')
-    # See if the tasks need to be moved to the next phase

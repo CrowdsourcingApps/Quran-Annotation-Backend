@@ -35,11 +35,28 @@ async def store_task_answer(
             user=user,
             task=task,
             label=answer)
-        # check if the task status is changed and update the
-        # label according to the majority of answers
         return vctu
     except Exception as ex:
         logger.exception('[db] - Add new ValidateCorrectnessTUser'
                          f'item error: {ex}')
         error_message = str(ex)
         return error_message
+
+
+async def get_vctask_labels(task_id: int) -> List[ValidateCorrectnessTUser]:
+    """ get labels of validate correctness task"""
+    labels = await ValidateCorrectnessTUser.filter(
+        task_id=task_id).all()
+    return labels
+
+
+async def update_validate_correctness_task_label(task_id: int,
+                                                 mv_label: LabelEnum) -> bool:
+    """ update validate correctness task label"""
+    result = await Task.filter(id=task_id).update(
+        label=mv_label)
+    if result == 0:
+        logger.exception(f'[db] - update task label failed {task_id} with'
+                         f' label {mv_label}')
+        return False
+    return True
