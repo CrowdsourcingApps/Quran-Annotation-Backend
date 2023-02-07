@@ -1,7 +1,10 @@
+from typing import List
+
 from pydantic import BaseModel
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from src.models import LabelEnum, ValidateCorrectnessCT
+from src.routes.schema import CreationError
 
 ValidateCorrectnessCTInSchema = pydantic_model_creator(
     ValidateCorrectnessCT,
@@ -17,3 +20,9 @@ ValidateCorrectnessCTOutSchema = pydantic_model_creator(
 class ValidateCorrectnessExamAnswers(BaseModel):
     id: int
     label: LabelEnum
+
+
+class CreateResponse(BaseModel):
+    message: str
+    pass_exam: bool
+    errors: List[CreationError] = []

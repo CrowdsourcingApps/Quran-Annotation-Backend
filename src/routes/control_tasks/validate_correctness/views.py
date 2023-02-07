@@ -4,16 +4,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.models import User, UserRoleEnum
-from src.routes.auth.handler import (
-    get_current_user, update_validate_correctness_exam_correct_no)
+from src.routes.auth.handler import (get_current_user,
+                                     update_validate_correctness_exam_status)
 from src.routes.control_tasks.validate_correctness import handler
 from src.routes.control_tasks.validate_correctness.helper import (
     get_validate_correctness_entrance_exam_list,
     save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
-    ValidateCorrectnessCTInSchema, ValidateCorrectnessCTOutSchema,
-    ValidateCorrectnessExamAnswers)
-from src.routes.schema import CreateResponse
+    CreateResponse, ValidateCorrectnessCTInSchema,
+    ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
+from src.routes.schema import CreationError
 
 router = APIRouter(prefix='/validate_correctness')
 ENTRANCE_EXAM_NO = 7
@@ -64,7 +64,7 @@ async def get_validate_correctness_entrance_exam(
         participate"""
     # validation
     # the user hasn't pass the test related to validate correctness task
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,7 +111,7 @@ async def add_validate_correctness_entrance_exam_answers(
      if they pass or fail"""
     # validation
     # the user hasn't pass the test related to validate correctness task
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -125,16 +125,23 @@ async def add_validate_correctness_entrance_exam_answers(
                    f' {ENTRANCE_EXAM_NO}',
         )
     # save answers and calculate number of correct answers
-    errors, correct_answers, user_metric = (
+    errors, user_metric = (
         await save_validate_control_tasks_list(exam_answers, user, test=True))
     # update user data for accuracy if the user pass the test
+    pass_exam = False
     if len(errors) == 0 and user_metric >= VALIDATE_CORRECTNESS_THRESHOLD:
-        await update_validate_correctness_exam_correct_no(
-            user.id,
-            correct_answers)
+        update_result = await update_validate_correctness_exam_status(
+            user.id)
+        if update_result is False:
+            error = CreationError(
+                message='User pass_exam result was not updated',
+                item=user.id)
+            errors.append(error)
+
     if len(errors) < ENTRANCE_EXAM_NO:
         return CreateResponse(
             message='Data was uploaded successfully.',
+            pass_exam=pass_exam,
             errors=errors)
     else:
         response = CreateResponse(message='Data was not uploaded successfully',

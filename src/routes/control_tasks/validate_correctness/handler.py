@@ -102,4 +102,9 @@ async def get_validate_correctness_control_task_answer(
         user=user,
         test=False
     ).all()
+    vcctu_list_test = await ValidateCorrectnessCTUser.filter(
+        user=user,
+        test=True
+    ).order_by('-create_date').limit(7).all()
+    vcctu_list.extend(vcctu_list_test)
     return vcctu_list

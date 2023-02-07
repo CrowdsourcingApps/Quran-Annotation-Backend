@@ -33,7 +33,7 @@ async def get_validate_correctness_tasks(
         user: User = Depends(get_current_user)) -> list:
     """ get real tasks for annotator to solve"""
     #  check that user is qualified
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if not pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -77,7 +77,7 @@ async def add_validate_correctness_entrance_exam_answers(
      if they pass or fail"""
     # validation
     # the user hasn't pass the test related to validate correctness task
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if not pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

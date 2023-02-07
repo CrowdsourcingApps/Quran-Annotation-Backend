@@ -24,10 +24,8 @@ class User(Model):
     hashed_password = fields.CharField(128)
     user_role = fields.CharEnumField(UserRoleEnum, default='annotator')
     create_date = fields.DateField(default=datetime.utcnow)
-    validate_correctness_exam_correct_no = fields.IntField(
-        default=0,
-        description='Number of correct answers in the entrance exam'
-                    ' of validate correctness task type')
+    validate_correctness_exam_pass = fields.BooleanField(
+        default=False)
     validate_correctness_tasks_no = fields.IntField(
         default=0,
         description='Number of tasks that user solve in'

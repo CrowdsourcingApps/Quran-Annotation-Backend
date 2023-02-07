@@ -5,7 +5,6 @@ from sklearn.metrics import matthews_corrcoef
 
 from src.models import LabelEnum, User
 from src.routes.control_tasks.validate_correctness.handler import (
-    get_validate_correctness_control_task_answer,
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
@@ -65,8 +64,6 @@ async def save_validate_control_tasks_list(
         answers: ValidateCorrectnessExamAnswers,
         user: User,
         test: bool) -> Tuple[List[CreationError], int]:
-    correct_answers = 0
-    correct = False
     errors: List[CreationError] = []
     y_pred = [task.label for task in answers]
     y_true = []
@@ -80,7 +77,6 @@ async def save_validate_control_tasks_list(
             continue
         y_true.append(task.label)
         if task.label == answer.label:
-            correct_answers += 1
             correct = True
         else:
             correct = False
@@ -93,21 +89,7 @@ async def save_validate_control_tasks_list(
     user_metric = 0
     if len(errors) == 0:
         user_metric = await calculate_validate_correctness_MCC(y_true, y_pred)
-    return errors, correct_answers, user_metric
-
-
-async def calculate_validate_correctness_accuracy(user: User) -> float:
-    base_correct_answers = user.validate_correctness_exam_correct_no
-    base_all_answers = ENTRANCE_EXAM_NO
-    # get list of validate correctness control tasks that user solved
-    control_tasks = await get_validate_correctness_control_task_answer(
-        user=user)
-    all_answers = base_all_answers + len(control_tasks)
-    correct_answers = [task for task in control_tasks
-                       if task.correct_answer is True]
-    all_correct_answers = base_correct_answers + len(correct_answers)
-    user_accuracy = all_correct_answers / all_answers
-    return user_accuracy
+    return errors, user_metric
 
 
 async def calculate_validate_correctness_MCC(y_true, y_pred) -> float:
