@@ -8,7 +8,7 @@ from src.routes.schema import CreationError
 from src.settings.logging import logger
 
 
-async def create_vcct(vcct: ValidateCorrectnessCTInSchema
+async def create_vcct(vcct: ValidateCorrectnessCT
                       ) -> Union[ValidateCorrectnessCT, str]:
     try:
         vcct_obj = await ValidateCorrectnessCT.create(
@@ -16,7 +16,9 @@ async def create_vcct(vcct: ValidateCorrectnessCTInSchema
             aya_number=vcct.aya_number,
             audio_file_name=vcct.audio_file_name,
             duration_ms=vcct.duration_ms,
-            label=vcct.label)
+            label=vcct.label,
+            golden=vcct.golden,
+        )
         return vcct_obj
     except Exception as ex:
         logger.exception('[db] - Add new ValidateCorrectnessControlTask'

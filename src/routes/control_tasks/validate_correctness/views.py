@@ -132,6 +132,7 @@ async def add_validate_correctness_entrance_exam_answers(
     if len(errors) == 0 and user_metric >= VALIDATE_CORRECTNESS_THRESHOLD:
         update_result = await update_validate_correctness_exam_status(
             user.id)
+        pass_exam = True
         if update_result is False:
             error = CreationError(
                 message='User pass_exam result was not updated',

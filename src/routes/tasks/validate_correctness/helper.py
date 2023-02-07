@@ -2,12 +2,13 @@ from typing import List
 
 from src.models import ValidateCorrectnessCT
 from src.routes.control_tasks.validate_correctness.handler import (
-    get_validate_correctness_control_task,
+    create_vcct, get_validate_correctness_control_task,
     get_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.helper import \
     calculate_validate_correctness_MCC
 from src.routes.tasks.validate_correctness.handler import (
-    get_vctask_labels, update_validate_correctness_task_label)
+    get_validate_correctness_task, get_vctask_labels,
+    update_validate_correctness_task_label)
 from src.routes.tasks.validate_correctness.schema import \
     ValidateCorrectnessTOutSchema as VCTOut
 from src.settings import settings
@@ -53,7 +54,8 @@ async def check_task_status(task_id: int):
     # fetch each label and user id for the task
     records = await get_vctask_labels(task_id)
     # check if the task has at least three labels
-    if len(records) >= 3:
+    user_responses_count = len(records)
+    if user_responses_count >= 3:
         labels = {}
         max_accuracy = 0
         for record in records:
@@ -62,7 +64,10 @@ async def check_task_status(task_id: int):
             # calculate user_metric accuracy in validate correctness task
             control_tasks = await get_validate_correctness_control_task_answer(
                 user=user)
-            y_true = [await task.user.get().label for task in control_tasks]
+            y_true = []
+            for task in control_tasks:
+                task = await task.validatecorrectnessct.get()
+                y_true.append(task.label)
             y_pred = [task.label for task in control_tasks]
             user_metric = await calculate_validate_correctness_MCC(y_true,
                                                                    y_pred)
@@ -86,12 +91,22 @@ async def check_task_status(task_id: int):
                 if labels[majority_label[0]]['annotators_num'] < 3:
                     # the task is not solved yet and we need more annotators
                     return
-                else:
-                    # check the inter-annotator agreement to see if we can
-                    # convert the task to control task.
-                    pass
             # the task is solved. Update the task label
             await update_validate_correctness_task_label(task_id, final_label)
+            # convert the task to control task if all the annotators agree
+            majority_anno_num = labels[majority_label[0]]['annotators_num']
+            if majority_anno_num == user_responses_count:
+                # get the task
+                task = await get_validate_correctness_task(task_id)
+                # convert the task to control task
+                vcct_obj = ValidateCorrectnessCT(
+                    audio_file_name=task.audio_file_name,
+                    surra_number=task.surra_number,
+                    aya_number=task.aya_number,
+                    duration_ms=task.duration_ms,
+                    label=final_label,
+                    golden=False)
+                await create_vcct(vcct_obj)
             return
     # the task is not solved yet and we need more annotators
     return
