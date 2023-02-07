@@ -18,7 +18,7 @@ from src.routes.schema import CreateResponse
 router = APIRouter(prefix='/validate_correctness')
 ENTRANCE_EXAM_NO = 7
 ALLOWED_ATTEMPTS = 5
-VALIDATE_CORRECTNESS_THRESHOLD = 0.7
+VALIDATE_CORRECTNESS_THRESHOLD = 0.6
 
 
 @router.post('/',
@@ -125,11 +125,10 @@ async def add_validate_correctness_entrance_exam_answers(
                    f' {ENTRANCE_EXAM_NO}',
         )
     # save answers and calculate number of correct answers
-    errors, correct_answers = await save_validate_control_tasks_list(
-        exam_answers, user, test=True)
-    user_accuracy = correct_answers/ENTRANCE_EXAM_NO
+    errors, correct_answers, user_metric = (
+        await save_validate_control_tasks_list(exam_answers, user, test=True))
     # update user data for accuracy if the user pass the test
-    if len(errors) == 0 and user_accuracy >= VALIDATE_CORRECTNESS_THRESHOLD:
+    if len(errors) == 0 and user_metric >= VALIDATE_CORRECTNESS_THRESHOLD:
         await update_validate_correctness_exam_correct_no(
             user.id,
             correct_answers)

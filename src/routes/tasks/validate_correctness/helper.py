@@ -1,10 +1,11 @@
 from typing import List
 
 from src.models import ValidateCorrectnessCT
-from src.routes.control_tasks.validate_correctness.handler import \
-    get_validate_correctness_control_task
+from src.routes.control_tasks.validate_correctness.handler import (
+    get_validate_correctness_control_task,
+    get_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.helper import \
-    calculate_validate_correctness_accuracy
+    calculate_validate_correctness_MCC
 from src.routes.tasks.validate_correctness.handler import (
     get_vctask_labels, update_validate_correctness_task_label)
 from src.routes.tasks.validate_correctness.schema import \
@@ -58,21 +59,26 @@ async def check_task_status(task_id: int):
         for record in records:
             label = record.label
             user = await record.user.get()
-            # calculate user accuracy in validate correctness task
-            user_accuracy = await calculate_validate_correctness_accuracy(user)
+            # calculate user_metric accuracy in validate correctness task
+            control_tasks = await get_validate_correctness_control_task_answer(
+                user=user)
+            y_true = [await task.user.get().label for task in control_tasks]
+            y_pred = [task.label for task in control_tasks]
+            user_metric = await calculate_validate_correctness_MCC(y_true,
+                                                                   y_pred)
             if label in labels:
-                labels[label]['sum_accuracy'] += user_accuracy
+                labels[label]['sum_metric'] += user_metric
                 labels[label]['annotators_num'] += 1
             else:
                 labels[label] = {
-                    'sum_accuracy': user_accuracy,
+                    'sum_metric': user_metric,
                     'annotators_num': 1
                 }
-            if labels[label]['sum_accuracy'] > max_accuracy:
-                max_accuracy = labels[label]['sum_accuracy']
+            if labels[label]['sum_metric'] > max_accuracy:
+                max_accuracy = labels[label]['sum_metric']
         # determine the majority label
         majority_label = [k for k, v in labels.items()
-                          if v['sum_accuracy'] == max_accuracy]
+                          if v['sum_metric'] == max_accuracy]
         if len(majority_label) == 1:
             # check if the majority label is 'correct' to have 3 annotators
             final_label = majority_label[0]
@@ -80,6 +86,10 @@ async def check_task_status(task_id: int):
                 if labels[majority_label[0]]['annotators_num'] < 3:
                     # the task is not solved yet and we need more annotators
                     return
+                else:
+                    # check the inter-annotator agreement to see if we can
+                    # convert the task to control task.
+                    pass
             # the task is solved. Update the task label
             await update_validate_correctness_task_label(task_id, final_label)
             return

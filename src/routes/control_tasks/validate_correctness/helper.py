@@ -1,6 +1,8 @@
 import random
 from typing import List, Tuple, Union
 
+from sklearn.metrics import matthews_corrcoef
+
 from src.models import LabelEnum, User
 from src.routes.control_tasks.validate_correctness.handler import (
     get_validate_correctness_control_task_answer,
@@ -66,6 +68,8 @@ async def save_validate_control_tasks_list(
     correct_answers = 0
     correct = False
     errors: List[CreationError] = []
+    y_pred = [task.label for task in answers]
+    y_true = []
     for answer in answers:
         task = await get_validate_correctness_control_task_by_id(
             id=answer.id)
@@ -74,6 +78,7 @@ async def save_validate_control_tasks_list(
                                   item=task.id)
             errors.append(error)
             continue
+        y_true.append(task.label)
         if task.label == answer.label:
             correct_answers += 1
             correct = True
@@ -85,7 +90,10 @@ async def save_validate_control_tasks_list(
             error = CreationError(message=result,
                                   item=answer.id)
             errors.append(error)
-    return errors, correct_answers
+    user_metric = 0
+    if len(errors) == 0:
+        user_metric = await calculate_validate_correctness_MCC(y_true, y_pred)
+    return errors, correct_answers, user_metric
 
 
 async def calculate_validate_correctness_accuracy(user: User) -> float:
@@ -100,3 +108,11 @@ async def calculate_validate_correctness_accuracy(user: User) -> float:
     all_correct_answers = base_correct_answers + len(correct_answers)
     user_accuracy = all_correct_answers / all_answers
     return user_accuracy
+
+
+async def calculate_validate_correctness_MCC(y_true, y_pred) -> float:
+    class_weights = {'correct': 2, 'in_correct': 2, 'not_related_quran': 1,
+                     'not_match_aya': 1, 'multiple_aya': 1}
+    sample_weight = [class_weights[y] for y in y_true]
+    mcc = matthews_corrcoef(y_true, y_pred, sample_weight=sample_weight)
+    return mcc
