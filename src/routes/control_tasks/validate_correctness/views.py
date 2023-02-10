@@ -4,20 +4,21 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.models import User, UserRoleEnum
-from src.routes.auth.handler import (
-    get_current_user, update_validate_correctness_exam_correct_no)
-from src.routes.control_tasks.schema import CreateResponse, CreationError
+from src.routes.auth.handler import (get_current_user,
+                                     update_validate_correctness_exam_status)
 from src.routes.control_tasks.validate_correctness import handler
-from src.routes.control_tasks.validate_correctness.helper import \
-    get_validate_correctness_entrance_exam_list
+from src.routes.control_tasks.validate_correctness.helper import (
+    get_validate_correctness_entrance_exam_list,
+    save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
-    ValidateCorrectnessCTInSchema, ValidateCorrectnessCTOutSchema,
-    ValidateCorrectnessExamAnswers)
+    CreateResponse, ValidateCorrectnessCTInSchema,
+    ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
+from src.routes.schema import CreationError
 
 router = APIRouter(prefix='/validate_correctness')
 ENTRANCE_EXAM_NO = 7
 ALLOWED_ATTEMPTS = 5
-VALIDATE_CORRECTNESS_THRESHOLD = 0.7
+VALIDATE_CORRECTNESS_THRESHOLD = 0.6
 
 
 @router.post('/',
@@ -63,7 +64,7 @@ async def get_validate_correctness_entrance_exam(
         participate"""
     # validation
     # the user hasn't pass the test related to validate correctness task
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -110,7 +111,7 @@ async def add_validate_correctness_entrance_exam_answers(
      if they pass or fail"""
     # validation
     # the user hasn't pass the test related to validate correctness task
-    pass_exam = user.validate_correctness_exam_correct_no > 0
+    pass_exam = user.validate_correctness_exam_pass
     if pass_exam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -123,29 +124,25 @@ async def add_validate_correctness_entrance_exam_answers(
             detail="Participant's answers should be equal to"
                    f' {ENTRANCE_EXAM_NO}',
         )
-    # calculate number of correct
-    correct_answers = 0
-    errors: List[CreationError] = []
-    for exam_answer in exam_answers:
-        task = await handler.get_validate_correctness_control_task(
-            id=exam_answer.ct_id)
-        result = await handler.save_validate_correctness_control_task_answer(
-            user, task, exam_answer.label, test=True)
-        if isinstance(result, str):
-            error = CreationError(message=result,
-                                  item=exam_answer.ct_id)
-            errors.append(error)
-        if task.label == exam_answer.label:
-            correct_answers += 1
-    user_accuracy = correct_answers/ENTRANCE_EXAM_NO
+    # save answers and calculate number of correct answers
+    errors, user_metric = (
+        await save_validate_control_tasks_list(exam_answers, user, test=True))
     # update user data for accuracy if the user pass the test
-    if len(errors) == 0 and user_accuracy >= VALIDATE_CORRECTNESS_THRESHOLD:
-        await update_validate_correctness_exam_correct_no(
-            user.id,
-            correct_answers)
+    pass_exam = False
+    if len(errors) == 0 and user_metric >= VALIDATE_CORRECTNESS_THRESHOLD:
+        update_result = await update_validate_correctness_exam_status(
+            user.id)
+        pass_exam = True
+        if update_result is False:
+            error = CreationError(
+                message='User pass_exam result was not updated',
+                item=user.id)
+            errors.append(error)
+
     if len(errors) < ENTRANCE_EXAM_NO:
         return CreateResponse(
             message='Data was uploaded successfully.',
+            pass_exam=pass_exam,
             errors=errors)
     else:
         response = CreateResponse(message='Data was not uploaded successfully',

@@ -13,7 +13,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "client_id" VARCHAR(128) NOT NULL UNIQUE,
     "final_transcription" TEXT NOT NULL,
     "label" VARCHAR(17) NOT NULL,
-    "validated" BOOL NOT NULL  DEFAULT False
+    "validated" BOOL NOT NULL DEFAULT False
 );
 COMMENT ON COLUMN "task"."duration_ms" IS 'length of the audio file in ms';
 COMMENT ON COLUMN "task"."client_id" IS 'The id of the recitier';

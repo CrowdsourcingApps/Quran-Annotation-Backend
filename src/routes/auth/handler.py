@@ -55,10 +55,21 @@ async def authenticate_user(email: str, password: str):
     return user
 
 
-async def update_validate_correctness_exam_correct_no(
-        user_id: int, correct_no: int) -> bool:
+async def update_validate_correctness_exam_status(
+        user_id: int) -> bool:
     result = await User.filter(id=user_id).update(
-        validate_correctness_exam_correct_no=correct_no)
+        validate_correctness_exam_pass=True)
+    if result == 0:
+        return False
+    return True
+
+
+async def update_user_validate_correctness_tasks_no(
+        user: User, num: int) -> bool:
+    old = user.validate_correctness_tasks_no
+    new = old + num
+    result = await User.filter(id=user.id).update(
+        validate_correctness_tasks_no=new)
     if result == 0:
         return False
     return True
