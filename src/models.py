@@ -23,7 +23,7 @@ class User(Model):
     email = fields.CharField(max_length=128, unique=True)
     hashed_password = fields.CharField(128)
     user_role = fields.CharEnumField(UserRoleEnum, default='annotator')
-    create_date = fields.DateField(default=datetime.utcnow)
+    create_date = fields.DatetimeField(default=datetime.utcnow)
     validate_correctness_exam_pass = fields.BooleanField(
         default=False)
     validate_correctness_tasks_no = fields.IntField(
@@ -43,7 +43,7 @@ class ValidateCorrectnessCT(Model):
     aya_number = fields.IntField()
     audio_file_name = fields.CharField(max_length=128, unique=True)
     duration_ms = fields.IntField(description='length of the audio file in ms')
-    create_date = fields.DateField(default=datetime.utcnow)
+    create_date = fields.DatetimeField(default=datetime.utcnow)
     golden = fields.BooleanField(default=True)
     label = fields.CharEnumField(LabelEnum)
 
@@ -63,7 +63,7 @@ class ValidateCorrectnessCTUser(Model):
                                            '  quality control')
     label = fields.CharEnumField(LabelEnum)
     correct_answer = fields.BooleanField(default=True)
-    create_date = fields.DateField(default=datetime.utcnow)
+    create_date = fields.DatetimeField(default=datetime.utcnow)
 
     class Meta:
         table = 'validate_correctness_ct_user'
@@ -75,7 +75,7 @@ class Task(Model):
     aya_number = fields.IntField()
     audio_file_name = fields.CharField(max_length=128, unique=True)
     duration_ms = fields.IntField(description='length of the audio file in ms')
-    create_date = fields.DateField(null=True)
+    create_date = fields.DatetimeField(null=True)
     client_id = fields.CharField(max_length=128,
                                  unique=True,
                                  null=True,
@@ -90,7 +90,7 @@ class ValidateCorrectnessTUser(Model):
         'models.Task')
     user = fields.ForeignKeyField('models.User')
     label = fields.CharEnumField(LabelEnum)
-    create_date = fields.DateField(default=datetime.utcnow)
+    create_date = fields.DatetimeField(default=datetime.utcnow)
 
     class Meta:
         table = 'validate_correctness_t_user'
