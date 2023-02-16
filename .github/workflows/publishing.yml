@@ -31,5 +31,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: raghadsy/crowdsourcingayat:${{ env.TAG }}
+        tags: raghadsy/quran-annotation:${{ github.sha }}
       
