@@ -2,7 +2,7 @@ name: Quran Annotation Docker Image CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 permissions:
   contents: read
@@ -26,10 +26,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Read TAG from .env file
-      run: |
-        TAG=$(grep TAG .env | xargs)
-        echo "TAG=$TAG" >> $GITHUB_ENV
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
