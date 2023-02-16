@@ -29,7 +29,7 @@ services:
       - backend
   
   annotationapp:
-    image: quran-annotation
+    image: quran-annotation:${TAG}
     build:
       context: .
       dockerfile: ./Dockerfile
