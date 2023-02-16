@@ -1,6 +1,5 @@
 fastapi==0.89.1
 uvicorn==0.20.0
-wily==1.24.0
 bandit==1.7.4
 python-dotenv==0.21.1
 python-multipart==0.0.5
@@ -11,4 +10,3 @@ tortoise-orm==0.19.3
 asyncpg==0.27.0
 aerich==0.7.1
 scikit-learn==1.2.1
-radon==5.1.0
