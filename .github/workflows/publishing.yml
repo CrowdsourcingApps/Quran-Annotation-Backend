@@ -26,19 +26,9 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    if: contains(github.ref, "develop")
-      steps:
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: raghadsy/quran-annotation:${{ github.sha }}
-    if: contains(github.ref, "main")
-      steps:
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: raghadsy/quran-annotation-prod:${{ github.sha }}
+    - name: Build and push - develop
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: true
+        tags: raghadsy/quran-annotation:${{ github.sha }}
