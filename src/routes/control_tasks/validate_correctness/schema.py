@@ -22,7 +22,7 @@ class ValidateCorrectnessExamAnswers(BaseModel):
     label: LabelEnum
 
 
-class CreateResponse(BaseModel):
+class TestResponse(BaseModel):
     message: str
     pass_exam: bool
     errors: List[CreationError] = []

@@ -3,10 +3,12 @@ from typing import List, Tuple, Union
 
 from sklearn.metrics import matthews_corrcoef
 
-from src.models import LabelEnum, User
+from src.models import LabelEnum, User, ValidateCorrectnessCT
 from src.routes.control_tasks.validate_correctness.handler import (
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
+from src.routes.control_tasks.validate_correctness.schema import \
+    ValidateCorrectnessCTInSchema as VCCTIn
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTOutSchema as VCCTOut
 from src.routes.control_tasks.validate_correctness.schema import \
@@ -90,6 +92,25 @@ async def save_validate_control_tasks_list(
     if len(errors) == 0:
         user_metric = await calculate_validate_correctness_MCC(y_true, y_pred)
     return errors, user_metric
+
+
+def convert_schema(control_task: VCCTIn) -> ValidateCorrectnessCT:
+    """ Conver control task entered by admin to the standard model"""
+    return ValidateCorrectnessCT(
+        surra_number=control_task.surra_number,
+        aya_number=control_task.aya_number,
+        audio_file_name=control_task.audio_file_name,
+        duration_ms=control_task.duration_ms,
+        label=control_task.label,
+        golden=True)
+
+
+def convert_schema_list(control_task_list: List[VCCTIn]
+                        ) -> List[ValidateCorrectnessCT]:
+    """ Conver control task entered by admin to the standard model"""
+    for i, obj in enumerate(control_task_list):
+        control_task_list[i] = convert_schema(obj)
+    return control_task_list
 
 
 async def calculate_validate_correctness_MCC(y_true, y_pred) -> float:

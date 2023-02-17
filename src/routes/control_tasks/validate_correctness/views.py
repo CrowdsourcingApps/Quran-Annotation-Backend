@@ -8,12 +8,12 @@ from src.routes.auth.handler import (get_current_user,
                                      update_validate_correctness_exam_status)
 from src.routes.control_tasks.validate_correctness import handler
 from src.routes.control_tasks.validate_correctness.helper import (
-    get_validate_correctness_entrance_exam_list,
+    convert_schema_list, get_validate_correctness_entrance_exam_list,
     save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
-    CreateResponse, ValidateCorrectnessCTInSchema,
+    TestResponse, ValidateCorrectnessCTInSchema,
     ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
-from src.routes.schema import CreationError
+from src.routes.schema import CreateResponse, CreationError
 
 router = APIRouter(prefix='/validate_correctness')
 ENTRANCE_EXAM_NO = 7
@@ -35,13 +35,12 @@ async def add_validate_correctness_control_tasks(
     #  check that user is admin
     if user.user_role != UserRoleEnum.Admin:
         raise HTTPException(status_code=403, detail='you are not authorized')
+    control_tasks = convert_schema_list(control_tasks)
     result = await handler.Add_validate_correctness_control_tasks_list(
         control_tasks)
     if len(result) < len(control_tasks):
-        return CreateResponse(message='Data was uploaded successfully.'
-                                      ' Please upload audio files'
-                                      ' to MinIO control-task-bucket',
-                                      errors=result)
+        return CreateResponse(message='Data was uploaded successfully.',
+                              errors=result)
     else:
         response = CreateResponse(message='Data was not uploaded successfully',
                                   errors=result)
@@ -101,7 +100,7 @@ async def get_validate_correctness_entrance_exam(
 
 @router.post('/answers',
              status_code=200,
-             response_model=CreateResponse,
+             response_model=TestResponse,
              responses={401: {'description': 'UNAUTHORIZED'},
                         400: {'description': 'BAD REQUEST'}})
 async def add_validate_correctness_entrance_exam_answers(
@@ -140,13 +139,13 @@ async def add_validate_correctness_entrance_exam_answers(
             errors.append(error)
 
     if len(errors) < ENTRANCE_EXAM_NO:
-        return CreateResponse(
+        return TestResponse(
             message='Data was uploaded successfully.',
             pass_exam=pass_exam,
             errors=errors)
     else:
-        response = CreateResponse(message='Data was not uploaded successfully',
-                                  errors=errors)
+        response = TestResponse(message='Data was not uploaded successfully',
+                                errors=errors)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=response.dict()
