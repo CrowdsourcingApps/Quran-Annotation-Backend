@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from src.models import User
@@ -24,7 +24,7 @@ UserOutSchema = pydantic_model_creator(User, name='User',
 
 class UserInSchema(BaseModel):
     email: str
-    password: str
+    password: constr(min_length=8, max_length=128)
 
 
 class MessageSchema(BaseModel):
