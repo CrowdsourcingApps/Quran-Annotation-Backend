@@ -14,6 +14,7 @@ async def create_vcct(vcct: ValidateCorrectnessCT
         vcct_obj = await ValidateCorrectnessCT.create(
             surra_number=vcct.surra_number,
             aya_number=vcct.aya_number,
+            client_id=vcct.client_id,
             audio_file_name=vcct.audio_file_name,
             duration_ms=vcct.duration_ms,
             label=vcct.label,

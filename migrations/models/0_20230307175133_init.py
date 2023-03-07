@@ -10,7 +10,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "audio_file_name" VARCHAR(128) NOT NULL UNIQUE,
     "duration_ms" INT NOT NULL,
     "create_date" TIMESTAMPTZ,
-    "client_id" VARCHAR(128)  UNIQUE,
+    "client_id" VARCHAR(128),
     "final_transcription" TEXT,
     "label" VARCHAR(17),
     "validated" BOOL NOT NULL  DEFAULT False
@@ -33,12 +33,14 @@ CREATE TABLE IF NOT EXISTS "validate_correctness_ct" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "surra_number" INT NOT NULL,
     "aya_number" INT NOT NULL,
+    "client_id" VARCHAR(128),
     "audio_file_name" VARCHAR(128) NOT NULL UNIQUE,
     "duration_ms" INT NOT NULL,
     "create_date" TIMESTAMPTZ NOT NULL,
     "golden" BOOL NOT NULL  DEFAULT True,
     "label" VARCHAR(17) NOT NULL
 );
+COMMENT ON COLUMN "validate_correctness_ct"."client_id" IS 'The id of the recitier';
 COMMENT ON COLUMN "validate_correctness_ct"."duration_ms" IS 'length of the audio file in ms';
 COMMENT ON COLUMN "validate_correctness_ct"."label" IS 'Correct: correct\nInCorrect: in_correct\nNotRelatedToQuran: not_related_quran\nNotMatchAya: not_match_aya\nMultipleAya: multiple_aya';
 CREATE TABLE IF NOT EXISTS "validate_correctness_ct_user" (

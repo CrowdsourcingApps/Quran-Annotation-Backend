@@ -142,7 +142,8 @@ async def add_validate_correctness_entrance_exam_answers(
         return TestResponse(
             message='Data was uploaded successfully.',
             pass_exam=pass_exam,
-            errors=errors)
+            errors=errors,
+            score=user_metric)
     else:
         response = TestResponse(message='Data was not uploaded successfully',
                                 errors=errors)

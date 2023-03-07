@@ -99,6 +99,7 @@ def convert_schema(control_task: VCCTIn) -> ValidateCorrectnessCT:
     return ValidateCorrectnessCT(
         surra_number=control_task.surra_number,
         aya_number=control_task.aya_number,
+        client_id=control_task.client_id,
         audio_file_name=control_task.audio_file_name,
         duration_ms=control_task.duration_ms,
         label=control_task.label,
