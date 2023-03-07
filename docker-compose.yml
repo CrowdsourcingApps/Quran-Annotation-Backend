@@ -1,6 +1,18 @@
 version: '3.4'
 
 services:
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - annotationapp
+      #- pgadmin
+    networks:
+      - backend
+
   postgres:
     image: postgres
     environment:
@@ -14,19 +26,19 @@ services:
     networks:
       - backend
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-    ports:
-      - "80:80"
-    depends_on:
-      - postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - backend
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - postgres
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   networks:
+  #     - backend
   
   annotationapp:
     image: quran-annotation:${TAG}
@@ -46,7 +58,7 @@ services:
 
 volumes:
   postgres_data: {}
-  pgadmin_data: {}
+  #pgadmin_data: {}
   logging-data:
 
 networks:

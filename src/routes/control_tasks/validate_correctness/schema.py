@@ -14,7 +14,7 @@ ValidateCorrectnessCTInSchema = pydantic_model_creator(
 ValidateCorrectnessCTOutSchema = pydantic_model_creator(
     ValidateCorrectnessCT,
     name='ValidateCorrectnessCTOutSchema',
-    exclude=['golden', 'create_date'])
+    exclude=['golden', 'create_date', 'client_id'])
 
 
 class ValidateCorrectnessExamAnswers(BaseModel):
@@ -25,4 +25,5 @@ class ValidateCorrectnessExamAnswers(BaseModel):
 class TestResponse(BaseModel):
     message: str
     pass_exam: bool
+    score: float
     errors: List[CreationError] = []

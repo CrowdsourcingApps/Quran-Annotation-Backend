@@ -41,6 +41,9 @@ class User(Model):
 class ValidateCorrectnessCT(Model):
     surra_number = fields.IntField()
     aya_number = fields.IntField()
+    client_id = fields.CharField(max_length=128,
+                                 null=True,
+                                 description='The id of the recitier')
     audio_file_name = fields.CharField(max_length=128, unique=True)
     duration_ms = fields.IntField(description='length of the audio file in ms')
     create_date = fields.DatetimeField(default=datetime.utcnow)
@@ -77,7 +80,6 @@ class Task(Model):
     duration_ms = fields.IntField(description='length of the audio file in ms')
     create_date = fields.DatetimeField(null=True)
     client_id = fields.CharField(max_length=128,
-                                 unique=True,
                                  null=True,
                                  description='The id of the recitier')
     final_transcription = fields.TextField(null=True)

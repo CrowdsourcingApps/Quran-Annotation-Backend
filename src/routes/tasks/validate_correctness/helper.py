@@ -104,6 +104,7 @@ async def check_task_status(task_id: int):
                     surra_number=task.surra_number,
                     aya_number=task.aya_number,
                     duration_ms=task.duration_ms,
+                    client_id=task.client_id,
                     label=final_label,
                     golden=False)
                 await create_vcct(vcct_obj)

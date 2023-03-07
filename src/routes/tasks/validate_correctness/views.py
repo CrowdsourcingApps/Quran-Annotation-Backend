@@ -58,9 +58,10 @@ async def get_validate_correctness_tasks(
 
     # convert them to output schema
     tasksout = helper.convert_schema_list(tasks, control_task=False)
-    control_task_out = helper.convert_schema_list([control_task],
-                                                  control_task=True)
-    tasksout.extend(control_task_out)
+    if control_task is not None:
+        control_task_out = helper.convert_schema_list([control_task],
+                                                      control_task=True)
+        tasksout.extend(control_task_out)
     tasksout = helper.get_whole_path_for_audio_file_name(tasksout)
     return tasksout
 
