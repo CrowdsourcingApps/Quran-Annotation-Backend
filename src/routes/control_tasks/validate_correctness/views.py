@@ -16,7 +16,7 @@ from src.routes.control_tasks.validate_correctness.schema import (
 from src.routes.schema import CreateResponse, CreationError
 
 router = APIRouter(prefix='/validate_correctness')
-ENTRANCE_EXAM_NO = 7
+ENTRANCE_EXAM_NO = 8
 ALLOWED_ATTEMPTS = 5
 VALIDATE_CORRECTNESS_THRESHOLD = 0.6
 
