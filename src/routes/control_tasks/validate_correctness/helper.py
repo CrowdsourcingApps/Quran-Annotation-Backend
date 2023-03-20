@@ -18,7 +18,7 @@ from src.settings import settings
 from src.settings.logging import logger
 
 BUCKET_PATH = settings.get_minio_Bucket_url()
-ENTRANCE_EXAM_NO = 7
+ENTRANCE_EXAM_NO = 8
 
 
 async def get_validate_correctness_entrance_exam_list(
@@ -36,12 +36,15 @@ async def get_validate_correctness_entrance_exam_list(
                     if item.label == LabelEnum.NotMatchAya]
         ct_type5 = [item for item in golden_tasks
                     if item.label == LabelEnum.NotRelatedToQuran]
+        ct_type6 = [item for item in golden_tasks
+                    if item.label == LabelEnum.InComplete]
         test_questions = []
         test_questions += random.sample(ct_type1, k=2)
         test_questions += random.sample(ct_type2, k=2)
         test_questions += random.sample(ct_type3, k=1)
         test_questions += random.sample(ct_type4, k=1)
         test_questions += random.sample(ct_type5, k=1)
+        test_questions += random.sample(ct_type6, k=1)
         random.shuffle(test_questions)
         try:
             # add the whole path for the file name
@@ -116,7 +119,7 @@ def convert_schema_list(control_task_list: List[VCCTIn]
 
 async def calculate_validate_correctness_MCC(y_true, y_pred) -> float:
     class_weights = {'correct': 2, 'in_correct': 2, 'not_related_quran': 1,
-                     'not_match_aya': 1, 'multiple_aya': 1}
+                     'not_match_aya': 1, 'multiple_aya': 1, 'in_complete': 1}
     sample_weight = [class_weights[y] for y in y_true]
     mcc = matthews_corrcoef(y_true, y_pred, sample_weight=sample_weight)
     return mcc

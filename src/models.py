@@ -17,6 +17,7 @@ class LabelEnum(str, Enum):
     NotRelatedToQuran = 'not_related_quran'
     NotMatchAya = 'not_match_aya'
     MultipleAya = 'multiple_aya'
+    InComplete = 'in_complete'
 
 
 class User(Model):
