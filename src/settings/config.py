@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_NAME: str
     AUTH_SECRET_KEY: str
+    Website_Email: str
+    Email_Password: str
 
     class Config:
         env_file = '.env'

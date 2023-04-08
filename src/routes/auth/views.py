@@ -1,9 +1,15 @@
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
-from src.routes.auth.schema import Token, UserInSchema, UserOutSchema
+from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
+                                    UserInSchema, UserOutSchema)
+from src.settings import settings
 from src.settings.logging import logger
 
 router = APIRouter()
@@ -93,6 +99,45 @@ async def refresh(refresh_token: str = Depends(auth_helper.oauth2_scheme)):
         logger.exception(f'[token] - Decoding error: {ex}')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+
+
+@router.post(
+    '/sendmail',
+    response_model=MessageSchema,
+    status_code=200,
+    responses={400: {'description': 'BAD REQUEST'},
+               500: {'description': 'INTERNAL SERVER ERROR'}},
+)
+async def contact_us(form_data: EmailMessageSchema):
+    smtp_server = 'smtp.titan.email'
+    smtp_port = 465
+    username = settings.Website_Email
+    password = settings.Email_Password
+    sender = form_data.email
+    recipients = [settings.Website_Email]
+    subject = form_data.name if form_data.name is not None else sender
+
+    # Send the email
+    try:
+        context = ssl.create_default_context()
+        s = smtplib.SMTP_SSL(smtp_server, smtp_port, context)
+        s.set_debuglevel(1)
+        s.ehlo()
+        s.login(username, password)
+        msg = MIMEText(form_data.message)
+        msg['From'] = sender
+        msg['To'] = ', '.join(recipients)
+        msg['Subject'] = f'Message from {subject}'
+        s.sendmail(username, recipients, msg.as_string())
+        s.close()
+        return MessageSchema(info='sucess')
+    except Exception as ex:
+        logger.exception(f'[Email] - Send Email error: {ex}')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Could not validate credentials',
             headers={'WWW-Authenticate': 'Bearer'},
         )
