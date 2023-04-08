@@ -29,3 +29,9 @@ class UserInSchema(BaseModel):
 
 class MessageSchema(BaseModel):
     info: str
+
+
+class EmailMessageSchema(BaseModel):
+    email: str
+    name: str = None
+    message: str
