@@ -21,7 +21,7 @@ async def get_validate_correctness_tasks(
         limit: int, skip_ids: List[int]) -> List[Task]:
     """ get validate correctness tasks"""
     vcts = await Task.filter(id__not_in=skip_ids,
-                             label=None).limit(limit).all()
+                             label=None).order_by('id').limit(limit).all()
     return vcts
 
 
