@@ -26,12 +26,17 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Branch name
-      run: echo running on branch ${GITHUB_REF##*/}
     - name: Build and push - develop
-      if: true
+      if: ${GITHUB_REF##*/} == develop
       uses: docker/build-push-action@v3
       with:
         context: .
         push: true
         tags: raghadsy/quran-annotation:${{ github.sha }}
+    - name: Build and push - main
+      if: ${GITHUB_REF##*/} == main
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: true
+        tags: raghadsy/quran-annotation-live:${{ github.sha }}
