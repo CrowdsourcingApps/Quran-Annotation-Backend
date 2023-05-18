@@ -28,15 +28,23 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Set env BRANCH
       run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
+    - name: Set env MAIN
+      run: |
+        if [[ $BRANCH == 'main' && $GITHUB_EVENT_NAME == 'push' ]]; then
+            echo "MAIN=true" >> "$GITHUB_ENV"
+        else
+            echo "MAIN=false" >> "$GITHUB_ENV"
+        fi
+
     - name: Build and push - develop
-      if: env.BRANCH == develop
+      if: env.MAIN == false
       uses: docker/build-push-action@v3
       with:
         context: .
         push: true
         tags: raghadsy/quran-annotation:${{ github.sha }}
     - name: Build and push - main
-      if: env.BRANCH == main
+      if: env.MAIN == true
       uses: docker/build-push-action@v3
       with:
         context: .
