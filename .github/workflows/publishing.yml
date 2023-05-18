@@ -26,7 +26,10 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Branch name
+      run: echo running on branch ${GITHUB_REF##*/}
     - name: Build and push - develop
+      if: true
       uses: docker/build-push-action@v3
       with:
         context: .
