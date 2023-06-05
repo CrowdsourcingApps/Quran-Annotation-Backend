@@ -16,3 +16,7 @@ class ValidateCorrectnessAnswers(BaseModel):
     id: int
     label: LabelEnum
     control_task: bool
+
+
+class Contribution(BaseModel):
+    count: int

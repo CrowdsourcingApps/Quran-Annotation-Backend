@@ -106,3 +106,15 @@ async def get_total_solved_tasks(surra_id: int = None):
     else:
         solved_count = await Task.filter(label__not_isnull=True).count()
     return solved_count
+
+
+async def get_contribution_by_date(user_id: int, date):
+    date_str = date.strftime('%Y-%m-%d')
+    query = f"""
+    SELECT count(*) FROM validate_correctness_t_user
+    WHERE DATE(create_date) = '{date_str}'
+    AND user_id = {user_id}
+    """
+    result = await Tortoise.get_connection('default').execute_query_dict(query)
+    count = result[0]['count']
+    return count
