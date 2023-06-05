@@ -16,10 +16,11 @@ from src.routes.tasks.validate_correctness.schema import \
     ValidateCorrectnessAnswers
 from src.routes.tasks.validate_correctness.schema import \
     ValidateCorrectnessTOutSchema as VCTOut
+from src.settings import settings
 
 router = APIRouter(prefix='/validate_correctness')
 TASKS_In_BATCH_NO = 5
-REAL_TASKS_NO = 8
+REAL_TASKS_NO = settings.REAL_TASKS_NO
 
 
 @router.get('/',
