@@ -88,3 +88,21 @@ async def update_validate_correctness_task_label(task_id: int,
                          f' label {mv_label}')
         return False
     return True
+
+
+async def get_total_tasks(surra_id: int = None):
+    if surra_id is not None:
+        total_count = await Task.filter(surra_number=surra_id).count()
+    else:
+        total_count = await Task.all().count()
+    return total_count
+
+
+async def get_total_solved_tasks(surra_id: int = None):
+    if surra_id is not None:
+        solved_count = await Task.filter(label__not_isnull=True,
+                                         surra_number=surra_id
+                                         ).count()
+    else:
+        solved_count = await Task.filter(label__not_isnull=True).count()
+    return solved_count
