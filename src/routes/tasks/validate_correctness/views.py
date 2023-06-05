@@ -19,7 +19,7 @@ from src.routes.tasks.validate_correctness.schema import \
 
 router = APIRouter(prefix='/validate_correctness')
 TASKS_In_BATCH_NO = 5
-REAL_TASKS_NO = 4
+REAL_TASKS_NO = 8
 
 
 @router.get('/',
