@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     AUTH_SECRET_KEY: str
     Website_Email: str
     Email_Password: str
+    PRIORITY_MAPPING: str
 
     class Config:
         env_file = '.env'
