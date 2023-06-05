@@ -35,11 +35,15 @@ async def get_validate_correctness_tasks(
         case_statement += f' THEN {priority} '
     case_statement += 'END AS priority'
 
+    # Convert skip_ids to a comma-separated string
+    skip_ids_str = ','.join(str(id) for id in skip_ids)
+
     # Construct the SQL query
     query = f"""
     SELECT DISTINCT on (aya_number, priority)*, {case_statement}
     FROM task
     WHERE label is null
+    {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
     ORDER BY priority,aya_number,surra_number , id
     LIMIT {limit};
     """
