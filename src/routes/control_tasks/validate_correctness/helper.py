@@ -1,10 +1,11 @@
 import random
 from typing import List, Tuple, Union
 
-from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import accuracy_score, matthews_corrcoef
 
 from src.models import LabelEnum, User, ValidateCorrectnessCT
 from src.routes.control_tasks.validate_correctness.handler import (
+    get_validate_correctness_control_task_answer,
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
@@ -123,3 +124,19 @@ async def calculate_validate_correctness_MCC(y_true, y_pred) -> float:
     sample_weight = [class_weights[y] for y in y_true]
     mcc = matthews_corrcoef(y_true, y_pred, sample_weight=sample_weight)
     return mcc
+
+
+async def calculate_validate_correctness_acc(y_true, y_pred) -> float:
+    acc = accuracy_score(y_true, y_pred)
+    return acc
+
+
+async def get_y_true_y_predict_user(user: User) -> Tuple[list, list]:
+    control_tasks = await get_validate_correctness_control_task_answer(
+        user=user)
+    y_true = []
+    for task in control_tasks:
+        task = await task.validatecorrectnessct.get()
+        y_true.append(task.label)
+    y_pred = [task.label for task in control_tasks]
+    return y_true, y_pred

@@ -8,10 +8,11 @@ from src.routes.auth.handler import (get_current_user,
                                      update_validate_correctness_exam_status)
 from src.routes.control_tasks.validate_correctness import handler
 from src.routes.control_tasks.validate_correctness.helper import (
-    convert_schema_list, get_validate_correctness_entrance_exam_list,
+    calculate_validate_correctness_acc, convert_schema_list,
+    get_validate_correctness_entrance_exam_list, get_y_true_y_predict_user,
     save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
-    TestResponse, ValidateCorrectnessCTInSchema,
+    TestResponse, UserPerformance, ValidateCorrectnessCTInSchema,
     ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
 from src.routes.schema import CreateResponse, CreationError
 
@@ -151,3 +152,17 @@ async def add_validate_correctness_entrance_exam_answers(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=response.dict()
         )
+
+
+@router.get('/user_accuracy',
+            status_code=200,
+            response_model=UserPerformance,
+            responses={400: {'description': 'BAD REQUEST'}})
+async def get_user_accuracy(user: User = Depends(get_current_user)):
+    """This method bring accuracy of the user regarding
+       validate correctness tasks"""
+    y_true, y_pred = await get_y_true_y_predict_user(user=user)
+    acc = await calculate_validate_correctness_acc(y_true, y_pred)
+    return UserPerformance(
+        acc=acc*100
+    )
