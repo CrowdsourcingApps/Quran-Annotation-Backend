@@ -1,6 +1,10 @@
+import ast
 from typing import List, Union
 
+from tortoise import Tortoise
+
 from src.models import LabelEnum, Task, User, ValidateCorrectnessTUser
+from src.settings import settings
 from src.settings.logging import logger
 
 
@@ -20,8 +24,32 @@ async def get_validate_correctness_task(
 async def get_validate_correctness_tasks(
         limit: int, skip_ids: List[int]) -> List[Task]:
     """ get validate correctness tasks"""
-    vcts = await Task.filter(id__not_in=skip_ids,
-                             label=None).order_by('id').limit(limit).all()
+    # vctts = await Task.filter(id__not_in=skip_ids,
+    #                          label=None).order_by('id').limit(limit).all()
+    priority_mapping = ast.literal_eval(settings.PRIORITY_MAPPING)
+
+    # Generate the CASE statement dynamically
+    case_statement = 'CASE '
+    for surra_number, priority in priority_mapping.items():
+        case_statement += f'WHEN surra_number = {surra_number}'
+        case_statement += f' THEN {priority} '
+    case_statement += 'END AS priority'
+
+    # Convert skip_ids to a comma-separated string
+    skip_ids_str = ','.join(str(id) for id in skip_ids)
+
+    # Construct the SQL query
+    query = f"""
+    SELECT DISTINCT on (aya_number, priority)*, {case_statement}
+    FROM task
+    WHERE label is null
+    {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
+    ORDER BY priority,aya_number,surra_number , id
+    LIMIT {limit};
+    """
+    vcts_dict = await Tortoise.get_connection('default').execute_query_dict(
+        query)
+    vcts = [Task(**vct_dict) for vct_dict in vcts_dict]
     return vcts
 
 
@@ -60,3 +88,33 @@ async def update_validate_correctness_task_label(task_id: int,
                          f' label {mv_label}')
         return False
     return True
+
+
+async def get_total_tasks(surra_id: int = None):
+    if surra_id is not None:
+        total_count = await Task.filter(surra_number=surra_id).count()
+    else:
+        total_count = await Task.all().count()
+    return total_count
+
+
+async def get_total_solved_tasks(surra_id: int = None):
+    if surra_id is not None:
+        solved_count = await Task.filter(label__not_isnull=True,
+                                         surra_number=surra_id
+                                         ).count()
+    else:
+        solved_count = await Task.filter(label__not_isnull=True).count()
+    return solved_count
+
+
+async def get_contribution_by_date(user_id: int, date):
+    date_str = date.strftime('%Y-%m-%d')
+    query = f"""
+    SELECT count(*) FROM validate_correctness_t_user
+    WHERE DATE(create_date) = '{date_str}'
+    AND user_id = {user_id}
+    """
+    result = await Tortoise.get_connection('default').execute_query_dict(query)
+    count = result[0]['count']
+    return count

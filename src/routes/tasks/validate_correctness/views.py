@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,14 +13,15 @@ from src.routes.control_tasks.validate_correctness.helper import \
     save_validate_control_tasks_list
 from src.routes.schema import CreateResponse, CreationError
 from src.routes.tasks.validate_correctness import handler, helper
-from src.routes.tasks.validate_correctness.schema import \
-    ValidateCorrectnessAnswers
+from src.routes.tasks.validate_correctness.schema import (
+    Contribution, ValidateCorrectnessAnswers)
 from src.routes.tasks.validate_correctness.schema import \
     ValidateCorrectnessTOutSchema as VCTOut
+from src.settings import settings
 
 router = APIRouter(prefix='/validate_correctness')
 TASKS_In_BATCH_NO = 5
-REAL_TASKS_NO = 4
+REAL_TASKS_NO = settings.REAL_TASKS_NO
 
 
 @router.get('/',
@@ -133,3 +135,17 @@ async def add_validate_correctness_entrance_exam_answers(
                               message='Data was uploaded successfully.')
     return CreateResponse(errors=errors,
                           message='Data was not uploaded successfully.')
+
+
+@router.get('/today_contribution',
+            status_code=200,
+            response_model=Contribution,
+            responses={400: {'description': 'BAD REQUEST'}})
+async def get_today_contribution(user: User = Depends(get_current_user)):
+    """This method bring today contribution for the user"""
+    # Get today's date
+    today = date.today()
+    count = await handler.get_contribution_by_date(user.id, today)
+    return Contribution(
+        count=count
+    )

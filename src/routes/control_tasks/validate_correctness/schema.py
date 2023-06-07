@@ -27,3 +27,7 @@ class TestResponse(BaseModel):
     pass_exam: bool
     score: float
     errors: List[CreationError] = []
+
+
+class UserPerformance(BaseModel):
+    acc: float
