@@ -1,5 +1,7 @@
 from typing import List, Union
 
+from tortoise import Tortoise
+
 from src.models import (LabelEnum, User, ValidateCorrectnessCT,
                         ValidateCorrectnessCTUser)
 from src.routes.control_tasks.validate_correctness.schema import \
@@ -111,3 +113,16 @@ async def get_validate_correctness_control_task_answer(
     ).order_by('-create_date').limit(7).all()
     vcctu_list.extend(vcctu_list_test)
     return vcctu_list
+
+
+async def get_solved_control_tasks_by_date(user_id: int, date):
+    date_str = date.strftime('%Y-%m-%d')
+    query = f"""
+    SELECT count(*) FROM validate_correctness_ct_user
+    WHERE DATE(create_date) = '{date_str}'
+    AND test = {False}
+    AND user_id = {user_id}
+    """
+    result = await Tortoise.get_connection('default').execute_query_dict(query)
+    count = result[0]['count']
+    return count
