@@ -18,7 +18,7 @@ from src.routes.schema import CreationError
 from src.settings import settings
 from src.settings.logging import logger
 
-BUCKET_PATH = settings.get_minio_Bucket_url()
+BUCKET_PATH = settings.get_audio_url()
 ENTRANCE_EXAM_NO = 8
 
 

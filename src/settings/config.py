@@ -15,9 +15,10 @@ class Settings(BaseSettings):
     Email_Password: str
     PRIORITY_MAPPING: str
     REAL_TASKS_NO: int
+    Audio_URL: str
 
     class Config:
         env_file = '.env'
 
-    def get_minio_Bucket_url(self):
-        return self.MINIO_SERVER+'/'+self.MINIO_BUCKET_NAME+'/'
+    def get_audio_url(self):
+        return self.Audio_URL+'/'
