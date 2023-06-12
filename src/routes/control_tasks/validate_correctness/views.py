@@ -162,7 +162,10 @@ async def get_user_accuracy(user: User = Depends(get_current_user)):
     """This method bring accuracy of the user regarding
        validate correctness tasks"""
     y_true, y_pred = await get_y_true_y_predict_user(user=user)
-    acc = await calculate_validate_correctness_acc(y_true, y_pred)
+    if len(y_true) == 0:
+        acc = 0
+    else:
+        acc = await calculate_validate_correctness_acc(y_true, y_pred)
     return UserPerformance(
         acc=acc*100
     )
