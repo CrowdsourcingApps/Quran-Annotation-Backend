@@ -1,3 +1,4 @@
+import re
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -23,11 +24,23 @@ router = APIRouter()
                500: {'description': 'INTERNAL SERVER ERROR'}},
 )
 async def sign_up(form_data: UserInSchema):
-    db_user = await handler.get_user_by_email(email=form_data.email)
+    email = form_data.email.strip()
+
+    # Email validation pattern
+    email_pattern = r'^[\w\.-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+
+    # Check if the trimmed string matches the email pattern
+    if not re.match(email_pattern, email):
+        # Valid email format
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Email Not Valid')
+    db_user = await handler.get_user_by_email(email=email)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Email already registered')
+    form_data.email = email
     user = await handler.create_user(user=form_data)
     if user is None:
         raise HTTPException(
@@ -43,11 +56,22 @@ async def sign_up(form_data: UserInSchema):
     '/token',
     response_model=Token,
     status_code=200,
-    responses={401: {'description': 'UNAUTHORIZED'}},
+    responses={400: {'description': 'BAD REQUEST'},
+               401: {'description': 'UNAUTHORIZED'}},
 )
 async def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends()):
-    authorized_user = await handler.authenticate_user(form_data.username,
+    email = form_data.username.strip()
+    # Email validation pattern
+    email_pattern = r'^[\w\.-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+
+    # Check if the trimmed string matches the email pattern
+    if not re.match(email_pattern, email):
+        # Valid email format
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Email Not Valid')
+    authorized_user = await handler.authenticate_user(email,
                                                       form_data.password)
     if not authorized_user:
         raise HTTPException(

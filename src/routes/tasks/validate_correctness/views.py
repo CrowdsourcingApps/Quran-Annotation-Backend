@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from src.models import User
 from src.routes.auth.handler import (get_current_user,
                                      update_user_validate_correctness_tasks_no)
-from src.routes.control_tasks.validate_correctness.handler import \
-    get_previous_solved_questions
+from src.routes.control_tasks.validate_correctness.handler import (
+    get_previous_solved_questions, get_solved_control_tasks_by_date)
 from src.routes.control_tasks.validate_correctness.helper import \
     save_validate_control_tasks_list
 from src.routes.schema import CreateResponse, CreationError
@@ -145,7 +145,10 @@ async def get_today_contribution(user: User = Depends(get_current_user)):
     """This method bring today contribution for the user"""
     # Get today's date
     today = date.today()
-    count = await handler.get_contribution_by_date(user.id, today)
+    count_control_tasks = await get_solved_control_tasks_by_date(user.id,
+                                                                 today)
+    count_contribution = await handler.get_contribution_by_date(user.id, today)
+    count = count_control_tasks + count_contribution
     return Contribution(
         count=count
     )
