@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
-                                    UserInSchema, UserOutSchema)
+                                    UserInSchema, UserOutSchema, Anonymous)
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -50,6 +50,24 @@ async def sign_up(form_data: UserInSchema):
     access_token = auth_helper.create_access_token(user.email)
     refresh_token = auth_helper.create_refresh_token(user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post(
+    '/anonumous',
+    response_model=Anonymous,
+    status_code=200,
+    responses={400: {'description': 'BAD REQUEST'},
+               500: {'description': 'INTERNAL SERVER ERROR'}},
+)
+async def sign_up_anonumous():
+    user = await handler.create_anonumous()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='failed to create new user',
+        )
+    id = user.id
+    return Anonymous(anonymous_id=id)
 
 
 @router.post(

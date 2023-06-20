@@ -46,6 +46,11 @@ async def create_user(user: UserInSchema):
     return user_obj
 
 
+async def create_anonumous():
+    user_obj = await User.create(is_anonymous=True)
+    return user_obj
+
+
 async def authenticate_user(email: str, password: str):
     user = await get_user_by_email(email)
     if not user:
