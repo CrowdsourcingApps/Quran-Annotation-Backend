@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     PRIORITY_MAPPING: str
     REAL_TASKS_NO: int
     Audio_URL: str
+    FIREBASE_SETTINGS: str
+    FRONT_END: str
 
     class Config:
         env_file = '.env'
