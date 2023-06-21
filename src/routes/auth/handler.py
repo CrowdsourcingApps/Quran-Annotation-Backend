@@ -6,6 +6,7 @@ from jose import JWTError
 from src.models import User
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import UserInSchema
+from src.routes.notifications.handler import update_notification_token_user
 
 
 async def get_user_by_id(user_id: int) -> User:
@@ -56,6 +57,13 @@ async def get_anonumous(anonymous_id):
     return user_obj
 
 
+async def remove_anonumous(anonymous_id: int) -> bool:
+    result = await User.filter(is_anonymous=True, id=anonymous_id).delete()
+    if result == 0:
+        return False
+    return True
+
+
 async def transfare_anonymous(anonymous_id: int, user: UserInSchema) -> bool:
     hashed_password = auth_helper.get_password_hash(user.password)
     result = await User.filter(id=anonymous_id).update(
@@ -65,6 +73,16 @@ async def transfare_anonymous(anonymous_id: int, user: UserInSchema) -> bool:
     if result == 0:
         return False
     return True
+
+
+async def remove_anonymous_account(anonymous_id: int, user_id: int) -> bool:
+    # move tokens
+    await update_notification_token_user(anonymous_id, user_id)
+
+    # delete anonymous account
+    result = await remove_anonumous(anonymous_id)
+
+    return result
 
 
 async def authenticate_user(email: str, password: str):

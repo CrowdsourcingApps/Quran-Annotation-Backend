@@ -96,7 +96,8 @@ async def sign_up_anonumous():
                401: {'description': 'UNAUTHORIZED'}},
 )
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends()):
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        anonymous_id: int = None):
     email = form_data.username.strip()
     # Email validation pattern
     email_pattern = r'^[\w\.-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
@@ -115,6 +116,17 @@ async def login_for_access_token(
             detail='Incorrect email or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
+    if anonymous_id is not None:
+        # check validity of anonymous_id
+        anonymous_user = await handler.get_anonumous(anonymous_id)
+        user_id = authorized_user.id
+        if anonymous_user and anonymous_id != user_id:
+            # remove anonymous account after transfare notification tokes
+            result = await handler.remove_anonymous_account(anonymous_id,
+                                                            user_id)
+            if result is False:
+                logger.exception(f'[db] - removing {anonymous_id} failed')
+
     access_token = auth_helper.create_access_token(authorized_user.email)
     refresh_token = auth_helper.create_refresh_token(authorized_user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
