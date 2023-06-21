@@ -8,5 +8,10 @@ class AnonymousNotificationToken(BaseModel):
     platform: PlatformEnum
 
 
+class NotificationToken(BaseModel):
+    token: str
+    platform: PlatformEnum
+
+
 class MessageSchema(BaseModel):
     info: str

@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from src.routes.notifications.schema import (AnonymousNotificationToken,
-                                             MessageSchema)
+                                             MessageSchema,
+                                             NotificationToken)
 from src.routes.auth.handler import get_anonumous
 from src.routes.notifications import handler
+from src.routes.auth.handler import get_current_user
 
 router = APIRouter()
 
@@ -26,6 +28,29 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
 
     notification_token = await handler.add_notification_token(
         user_id=body.anonymous_id,
+        token=body.token,
+        platform=body.platform)
+    if notification_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='failed to save the notification token',
+        )
+    return MessageSchema(info='Success')
+
+
+@router.post(
+    '/store_token',
+    response_model=MessageSchema,
+    status_code=200,
+    responses={400: {'description': 'BAD REQUEST'},
+               500: {'description': 'INTERNAL SERVER ERROR'}},
+)
+async def store_token(body: NotificationToken,
+                      user=Depends(get_current_user)):
+    # TODO check validity of notification token
+
+    notification_token = await handler.add_notification_token(
+        user_id=user.id,
         token=body.token,
         platform=body.platform)
     if notification_token is None:
