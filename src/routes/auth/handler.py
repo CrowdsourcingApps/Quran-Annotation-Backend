@@ -56,6 +56,17 @@ async def get_anonumous(anonymous_id):
     return user_obj
 
 
+async def transfare_anonymous(anonymous_id: int, user: UserInSchema) -> bool:
+    hashed_password = auth_helper.get_password_hash(user.password)
+    result = await User.filter(id=anonymous_id).update(
+                                            email=user.email,
+                                            hashed_password=hashed_password,
+                                            is_anonymous=False)
+    if result == 0:
+        return False
+    return True
+
+
 async def authenticate_user(email: str, password: str):
     user = await get_user_by_email(email)
     if not user:

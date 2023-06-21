@@ -23,7 +23,7 @@ router = APIRouter()
     responses={400: {'description': 'BAD REQUEST'},
                500: {'description': 'INTERNAL SERVER ERROR'}},
 )
-async def sign_up(form_data: UserInSchema):
+async def sign_up(form_data: UserInSchema, anonymous_id: int = None):
     email = form_data.email.strip()
 
     # Email validation pattern
@@ -41,14 +41,32 @@ async def sign_up(form_data: UserInSchema):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Email already registered')
     form_data.email = email
-    user = await handler.create_user(user=form_data)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='failed to create new user',
-        )
-    access_token = auth_helper.create_access_token(user.email)
-    refresh_token = auth_helper.create_refresh_token(user.email)
+
+    if anonymous_id is not None:
+        # check validity of anonymous_id
+        anonymous_user = await handler.get_anonumous(anonymous_id)
+        if anonymous_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Invalid Anonymous User')
+        result = await handler.transfare_anonymous(anonymous_id=anonymous_id,
+                                                   user=form_data)
+        if result is False:
+            logger.exception(f'[db] - Remove anonymusity user {anonymous_id}')
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='Remove anonymusity user failed')
+
+    else:
+        user = await handler.create_user(user=form_data)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='failed to create new user',
+            )
+
+    access_token = auth_helper.create_access_token(form_data.email)
+    refresh_token = auth_helper.create_refresh_token(form_data.email)
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
