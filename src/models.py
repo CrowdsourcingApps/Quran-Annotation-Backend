@@ -20,6 +20,12 @@ class LabelEnum(str, Enum):
     InComplete = 'in_complete'
 
 
+class PlatformEnum(str, Enum):
+    Android = 'android'
+    IOS = 'ios'
+    Web = 'web'
+
+
 class User(Model):
     email = fields.CharField(max_length=128, unique=True,
                              null=True, default=None)
@@ -45,7 +51,7 @@ class NotificationToken(Model):
     user = fields.ForeignKeyField('models.User',
                                   related_name='notificationtokens')
     token = fields.CharField(max_length=255)
-    platform = fields.CharField(max_length=50)
+    platform = fields.CharEnumField(PlatformEnum)
     update_date = fields.DatetimeField(default=datetime.utcnow)
 
 

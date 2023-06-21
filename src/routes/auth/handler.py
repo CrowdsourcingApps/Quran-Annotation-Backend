@@ -51,6 +51,11 @@ async def create_anonumous():
     return user_obj
 
 
+async def get_anonumous(anonymous_id):
+    user_obj = await User.get_or_none(is_anonymous=True, id=anonymous_id)
+    return user_obj
+
+
 async def authenticate_user(email: str, password: str):
     user = await get_user_by_email(email)
     if not user:
