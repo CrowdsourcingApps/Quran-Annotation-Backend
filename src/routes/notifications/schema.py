@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from src.models import PlatformEnum
+from enum import Enum
 
 
 class AnonymousNotificationToken(BaseModel):
@@ -15,3 +16,7 @@ class NotificationToken(BaseModel):
 
 class MessageSchema(BaseModel):
     info: str
+
+
+class TopicEnum(str, Enum):
+    AllUsers = 'allusers'

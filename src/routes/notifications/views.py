@@ -1,9 +1,12 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.routes.notifications.schema import (AnonymousNotificationToken,
                                              MessageSchema,
-                                             NotificationToken)
+                                             NotificationToken,
+                                             TopicEnum)
 from src.routes.auth.handler import get_anonumous
 from src.routes.notifications import handler
+from src.routes.notifications.helper import notification_helper
 from src.routes.auth.handler import get_current_user
 
 router = APIRouter()
@@ -26,6 +29,7 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
 
     # TODO check validity of notification token
 
+    # store the token in db
     notification_token = await handler.add_notification_token(
         user_id=body.anonymous_id,
         token=body.token,
@@ -35,6 +39,10 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='failed to save the notification token',
         )
+    # subscribe token to the topic AllUsers in the background
+    asyncio.create_task(notification_helper.subscribe_topic(
+                                        [notification_token.token],
+                                        TopicEnum.AllUsers))
     return MessageSchema(info='Success')
 
 
@@ -58,4 +66,9 @@ async def store_token(body: NotificationToken,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='failed to save the notification token',
         )
+
+    # subscribe token to the topic AllUsers in the background
+    asyncio.create_task(notification_helper.subscribe_topic(
+                                    [notification_token.token],
+                                    TopicEnum.AllUsers))
     return MessageSchema(info='Success')
