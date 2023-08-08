@@ -39,10 +39,13 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='failed to save the notification token',
         )
+
+    # TODO bring language from user profile to subscribe the suitable topic
+
     # subscribe token to the topic AllUsers in the background
     asyncio.create_task(notification_helper.subscribe_topic(
                                         [notification_token.token],
-                                        TopicEnum.AllUsers))
+                                        TopicEnum.AllARUsers))
     return MessageSchema(info='Success')
 
 
@@ -67,8 +70,10 @@ async def store_token(body: NotificationToken,
             detail='failed to save the notification token',
         )
 
+    # TODO bring language from user profile to subscribe the suitable topic
+
     # subscribe token to the topic AllUsers in the background
     asyncio.create_task(notification_helper.subscribe_topic(
                                     [notification_token.token],
-                                    TopicEnum.AllUsers))
+                                    TopicEnum.AllARUsers))
     return MessageSchema(info='Success')

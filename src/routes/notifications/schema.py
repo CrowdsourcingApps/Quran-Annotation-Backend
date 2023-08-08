@@ -19,4 +19,6 @@ class MessageSchema(BaseModel):
 
 
 class TopicEnum(str, Enum):
-    AllUsers = 'allusers'
+    AllARUsers = 'all-ar-users'
+    AllRUUsers = 'all-ru-users'
+    AllENUsers = 'all-en-users'
