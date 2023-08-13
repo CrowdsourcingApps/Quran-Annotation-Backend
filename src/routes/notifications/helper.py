@@ -1,3 +1,4 @@
+import json
 import asyncio
 from firebase_admin import messaging
 from src.settings.logging import logger
@@ -6,6 +7,28 @@ MAX_RETRIES = 3
 
 
 class NotificationHelper:
+    async def load_localization_file(self, lang_code):
+        # Load the JSON localization file based on lang_code
+        file_path = f'src/localization/{lang_code}.json'
+        with open(file_path, 'r', encoding='utf-8') as file:
+            localization_data = json.load(file)
+
+        return localization_data
+
+    async def get_localized_message(self, lang_code, notification_key,
+                                    variables=None):
+        localization_data = await self.load_localization_file(lang_code)
+
+        notification = localization_data[notification_key]
+        title = notification['title']
+        body = (
+                notification['body'].format(**variables)
+                if variables
+                else notification['body']
+            )
+
+        return title, body
+
     async def subscribe_topic(self, tokens, topic):
         retries = 0
         while retries < MAX_RETRIES:
@@ -36,7 +59,7 @@ class NotificationHelper:
                 break
         return
 
-    async def push_notification_topic(title, body, topic, link):
+    async def push_notification_topic(self, title, body, topic, link):
         retries = 0
         while retries < MAX_RETRIES:
             try:
