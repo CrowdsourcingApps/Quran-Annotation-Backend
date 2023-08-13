@@ -3,12 +3,29 @@ import time
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from src.database import init_db
 from src.routes import init_api
 from src.settings.logging import logger
+from src.routes.tasks.validate_correctness.notification \
+    import achievement_notification
 
 app = FastAPI()
+
+
+def get_scheduler():
+    scheduler = AsyncIOScheduler()
+    scheduler.start()
+    return scheduler
+
+
+@app.on_event("startup")
+async def startup_event():
+    scheduler = get_scheduler()
+    trigger = CronTrigger(hour=12)  # Schedule job to run at midnight
+    scheduler.add_job(achievement_notification, trigger=trigger)
 
 
 @app.middleware('http')

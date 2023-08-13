@@ -12,3 +12,4 @@ aerich==0.7.1
 scikit-learn==1.2.1
 flake8==6.0.0
 firebase-admin==6.1.0
+APScheduler==3.10.2
