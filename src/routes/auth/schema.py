@@ -14,6 +14,10 @@ class UserUpdateSchema(BaseModel):
     email: str
 
 
+class Anonymous(BaseModel):
+    anonymous_id: int
+
+
 VALIDATE_CORRECTNESS_THRESHOLD = 0.7
 
 

@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
-                                    UserInSchema, UserOutSchema)
+                                    UserInSchema, UserOutSchema, Anonymous)
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -23,7 +23,7 @@ router = APIRouter()
     responses={400: {'description': 'BAD REQUEST'},
                500: {'description': 'INTERNAL SERVER ERROR'}},
 )
-async def sign_up(form_data: UserInSchema):
+async def sign_up(form_data: UserInSchema, anonymous_id: int = None):
     email = form_data.email.strip()
 
     # Email validation pattern
@@ -41,15 +41,51 @@ async def sign_up(form_data: UserInSchema):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Email already registered')
     form_data.email = email
-    user = await handler.create_user(user=form_data)
+
+    if anonymous_id is not None:
+        # check validity of anonymous_id
+        anonymous_user = await handler.get_anonumous(anonymous_id)
+        if anonymous_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Invalid Anonymous User')
+        result = await handler.transfare_anonymous(anonymous_id=anonymous_id,
+                                                   user=form_data)
+        if result is False:
+            logger.exception(f'[db] - Remove anonymusity user {anonymous_id}')
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='Remove anonymusity user failed')
+
+    else:
+        user = await handler.create_user(user=form_data)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='failed to create new user',
+            )
+
+    access_token = auth_helper.create_access_token(form_data.email)
+    refresh_token = auth_helper.create_refresh_token(form_data.email)
+    return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post(
+    '/anonumous',
+    response_model=Anonymous,
+    status_code=200,
+    responses={400: {'description': 'BAD REQUEST'},
+               500: {'description': 'INTERNAL SERVER ERROR'}},
+)
+async def sign_up_anonumous():
+    user = await handler.create_anonumous()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='failed to create new user',
         )
-    access_token = auth_helper.create_access_token(user.email)
-    refresh_token = auth_helper.create_refresh_token(user.email)
-    return Token(access_token=access_token, refresh_token=refresh_token)
+    id = user.id
+    return Anonymous(anonymous_id=id)
 
 
 @router.post(
@@ -60,7 +96,8 @@ async def sign_up(form_data: UserInSchema):
                401: {'description': 'UNAUTHORIZED'}},
 )
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends()):
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        anonymous_id: int = None):
     email = form_data.username.strip()
     # Email validation pattern
     email_pattern = r'^[\w\.-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
@@ -79,6 +116,17 @@ async def login_for_access_token(
             detail='Incorrect email or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
+    if anonymous_id is not None:
+        # check validity of anonymous_id
+        anonymous_user = await handler.get_anonumous(anonymous_id)
+        user_id = authorized_user.id
+        if anonymous_user and anonymous_id != user_id:
+            # remove anonymous account after transfare notification tokes
+            result = await handler.remove_anonymous_account(anonymous_id,
+                                                            user_id)
+            if result is False:
+                logger.exception(f'[db] - removing {anonymous_id} failed')
+
     access_token = auth_helper.create_access_token(authorized_user.email)
     refresh_token = auth_helper.create_refresh_token(authorized_user.email)
     return Token(access_token=access_token, refresh_token=refresh_token)

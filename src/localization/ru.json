@@ -1,0 +1,6 @@
+{
+    "achievement":{
+        "title": "New achievement 🎉",
+        "body":"We've reached {count} so far on {mission} 🚀"
+    }
+}

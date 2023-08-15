@@ -20,9 +20,16 @@ class LabelEnum(str, Enum):
     InComplete = 'in_complete'
 
 
+class PlatformEnum(str, Enum):
+    Android = 'android'
+    IOS = 'ios'
+    Web = 'web'
+
+
 class User(Model):
-    email = fields.CharField(max_length=128, unique=True)
-    hashed_password = fields.CharField(128)
+    email = fields.CharField(max_length=128, unique=True,
+                             null=True, default=None)
+    hashed_password = fields.CharField(128, null=True, default=None)
     user_role = fields.CharEnumField(UserRoleEnum, default='annotator')
     create_date = fields.DatetimeField(default=datetime.utcnow)
     validate_correctness_exam_pass = fields.BooleanField(
@@ -31,12 +38,21 @@ class User(Model):
         default=0,
         description='Number of tasks that user solve in'
                     'validate correctness task type')
+    is_anonymous = fields.BooleanField(default=False)
     validate_correctness_cts = fields.ManyToManyField(
         'models.ValidateCorrectnessCT',
         through='validate_correctness_ct_user')
     validate_correctness_ts = fields.ManyToManyField(
         'models.Task',
         through='validate_correctness_t_user')
+
+
+class NotificationToken(Model):
+    user = fields.ForeignKeyField('models.User',
+                                  related_name='notificationtokens')
+    token = fields.CharField(max_length=255)
+    platform = fields.CharEnumField(PlatformEnum)
+    update_date = fields.DatetimeField(default=datetime.utcnow)
 
 
 class ValidateCorrectnessCT(Model):
