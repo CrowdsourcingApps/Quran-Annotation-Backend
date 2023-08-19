@@ -27,25 +27,36 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Invalid Anonymous User')
 
-    # TODO check validity of notification token
+    # check if token is already exist
+    token_exist = await handler.token_exist(token=body.token)
+    if token_exist:
+        # update the date of token
+        result = await handler.update_notification_token_date(token=body.token)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='failed to update the notification token date',
+            )
+    else:
+        # TODO check validity of notification token
 
-    # store the token in db
-    notification_token = await handler.add_notification_token(
-        user_id=body.anonymous_id,
-        token=body.token,
-        platform=body.platform)
-    if notification_token is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='failed to save the notification token',
-        )
+        # store the token in db
+        notification_token = await handler.add_notification_token(
+            user_id=body.anonymous_id,
+            token=body.token,
+            platform=body.platform)
+        if notification_token is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='failed to save the notification token',
+            )
 
-    # TODO bring language from user profile to subscribe the suitable topic
+        # TODO bring language from user profile to subscribe the suitable topic
 
-    # subscribe token to the topic AllUsers in the background
-    asyncio.create_task(notification_helper.subscribe_topic(
-                                        [notification_token.token],
-                                        TopicEnum.AllARUsers))
+        # subscribe token to the topic AllUsers in the background
+        asyncio.create_task(notification_helper.subscribe_topic(
+                                            [notification_token.token],
+                                            TopicEnum.AllARUsers))
     return MessageSchema(info='Success')
 
 
@@ -58,22 +69,33 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
 )
 async def store_token(body: NotificationToken,
                       user=Depends(get_current_user)):
-    # TODO check validity of notification token
+    # check if token is already exist
+    token_exist = await handler.token_exist(token=body.token)
+    if token_exist:
+        # update the date of token
+        result = await handler.update_notification_token_date(token=body.token)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='failed to update the notification token date',
+            )
+    else:
+        # TODO check validity of notification token
 
-    notification_token = await handler.add_notification_token(
-        user_id=user.id,
-        token=body.token,
-        platform=body.platform)
-    if notification_token is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='failed to save the notification token',
-        )
+        notification_token = await handler.add_notification_token(
+            user_id=user.id,
+            token=body.token,
+            platform=body.platform)
+        if notification_token is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='failed to save the notification token',
+            )
 
-    # TODO bring language from user profile to subscribe the suitable topic
+        # TODO bring language from user profile to subscribe the suitable topic
 
-    # subscribe token to the topic AllUsers in the background
-    asyncio.create_task(notification_helper.subscribe_topic(
-                                    [notification_token.token],
-                                    TopicEnum.AllARUsers))
+        # subscribe token to the topic AllUsers in the background
+        asyncio.create_task(notification_helper.subscribe_topic(
+                                        [notification_token.token],
+                                        TopicEnum.AllARUsers))
     return MessageSchema(info='Success')
