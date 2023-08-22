@@ -26,6 +26,12 @@ class PlatformEnum(str, Enum):
     Web = 'web'
 
 
+class LanguageEnum(str, Enum):
+    AR = 'ar'
+    EN = 'en'
+    RU = 'ru'
+
+
 class User(Model):
     email = fields.CharField(max_length=128, unique=True,
                              null=True, default=None)
@@ -39,6 +45,7 @@ class User(Model):
         description='Number of tasks that user solve in'
                     'validate correctness task type')
     is_anonymous = fields.BooleanField(default=False)
+    language = fields.CharEnumField(LanguageEnum, default='ar')
     validate_correctness_cts = fields.ManyToManyField(
         'models.ValidateCorrectnessCT',
         through='validate_correctness_ct_user')
