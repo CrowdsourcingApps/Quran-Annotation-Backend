@@ -77,6 +77,7 @@ async def transfare_anonymous(anonymous_id: int, user: UserInSchema) -> bool:
 
 async def remove_anonymous_account(anonymous_id: int, user_id: int) -> bool:
     # move tokens
+    # TODO Refactoring: Move update_notification_token_user
     await update_notification_token_user(anonymous_id, user_id)
 
     # delete anonymous account
@@ -109,6 +110,15 @@ async def update_user_validate_correctness_tasks_no(
     new = old + num
     result = await User.filter(id=user.id).update(
         validate_correctness_tasks_no=new)
+    if result == 0:
+        return False
+    return True
+
+
+async def update_user_language(
+        user_id: int, lang: str) -> bool:
+    result = await User.filter(id=user_id).update(
+        language=lang)
     if result == 0:
         return False
     return True

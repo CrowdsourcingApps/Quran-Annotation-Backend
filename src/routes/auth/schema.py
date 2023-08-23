@@ -1,7 +1,14 @@
 from pydantic import BaseModel, constr
 from tortoise.contrib.pydantic import pydantic_model_creator
 
-from src.models import User
+from src.models import User, LanguageEnum
+from src.routes.notifications.schema import TopicEnum
+
+language_to_topic_mapping = {
+    LanguageEnum.AR: TopicEnum.AllARUsers,
+    LanguageEnum.EN: TopicEnum.AllENUsers,
+    LanguageEnum.RU: TopicEnum.AllRUUsers
+}
 
 
 class Token(BaseModel):
@@ -39,3 +46,7 @@ class EmailMessageSchema(BaseModel):
     email: str
     name: str = None
     message: str
+
+
+class langSchema(BaseModel):
+    language: LanguageEnum

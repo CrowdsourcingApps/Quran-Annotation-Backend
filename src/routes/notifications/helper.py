@@ -113,5 +113,10 @@ class NotificationHelper:
                     f' due to {e}')
         return
 
+    async def unsubscribe_subscribe_topic(self, old_topic, new_topic, tokens):
+        await self.unsubscribe_topic(tokens, old_topic)
+        await self.subscribe_topic(tokens, new_topic)
+        return
+
 
 notification_helper = NotificationHelper()

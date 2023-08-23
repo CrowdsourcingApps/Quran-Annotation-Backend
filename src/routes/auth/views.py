@@ -1,3 +1,4 @@
+import asyncio
 import re
 import smtplib
 import ssl
@@ -9,7 +10,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
-                                    UserInSchema, UserOutSchema, Anonymous)
+                                    UserInSchema, UserOutSchema, Anonymous,
+                                    langSchema, language_to_topic_mapping)
+from src.routes.notifications.helper import notification_helper
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -138,8 +141,42 @@ async def login_for_access_token(
     status_code=200,
     responses={401: {'description': 'UNAUTHORIZED'}},
 )
-async def read_users_me(user=Depends(handler.get_current_user)):
+async def get_user_info(user=Depends(handler.get_current_user)):
     return await UserOutSchema.from_tortoise_orm(user)
+
+
+@router.put(
+    '/language',
+    response_model=MessageSchema,
+    status_code=200,
+    responses={400: {'description': 'BAD REQUEST'},
+               401: {'description': 'UNAUTHORIZED'}},
+)
+async def update_language(language: langSchema,
+                          user=Depends(handler.get_current_user)):
+    old_language = user.language
+    new_language = language.language
+    if old_language == new_language:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='You have not changed the language')
+    result = await handler.update_user_language(user.id, new_language)
+    if result is True:
+        # successfully update language
+        # Retrieve related notificationtokens
+        notification_tokens = await user.notificationtokens.all()
+
+        # Extract token values from related objects
+        token_values = [token.token for token in notification_tokens]
+
+        # subscribe to different Topic
+        old_topic = language_to_topic_mapping.get(old_language)
+        new_topic = language_to_topic_mapping.get(new_language)
+        asyncio.create_task(notification_helper.unsubscribe_subscribe_topic(
+                                                    old_topic,
+                                                    new_topic,
+                                                    token_values))
+    return MessageSchema(info='success')
 
 
 @router.post(
@@ -205,7 +242,7 @@ async def contact_us(form_data: EmailMessageSchema):
         msg['Subject'] = f'Message from {subject}'
         s.sendmail(username, recipients, msg.as_string())
         s.close()
-        return MessageSchema(info='sucess')
+        return MessageSchema(info='success')
     except Exception as ex:
         logger.exception(f'[Email] - Send Email error: {ex}')
         raise HTTPException(
