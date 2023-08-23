@@ -2,12 +2,11 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.routes.notifications.schema import (AnonymousNotificationToken,
                                              MessageSchema,
-                                             NotificationToken,
-                                             TopicEnum)
+                                             NotificationToken)
 from src.routes.auth.handler import get_anonumous
 from src.routes.notifications import handler
 from src.routes.notifications.helper import notification_helper
-from src.routes.auth.handler import get_current_user
+from src.routes.auth.handler import get_current_user, get_user_topic
 
 router = APIRouter()
 
@@ -51,12 +50,13 @@ async def store_token_anonymous(body: AnonymousNotificationToken):
                 detail='failed to save the notification token',
             )
 
-        # TODO bring language from user profile to subscribe the suitable topic
+        # subscribe to the suitable topic for user
+        topic = await get_user_topic(user_id=body.anonymous_id)
 
         # subscribe token to the topic AllUsers in the background
         asyncio.create_task(notification_helper.subscribe_topic(
                                             [notification_token.token],
-                                            TopicEnum.AllARUsers))
+                                            topic))
     return MessageSchema(info='Success')
 
 
@@ -92,10 +92,11 @@ async def store_token(body: NotificationToken,
                 detail='failed to save the notification token',
             )
 
-        # TODO bring language from user profile to subscribe the suitable topic
+        # subscribe to the suitable topic for user
+        topic = await get_user_topic(user_id=user.id)
 
         # subscribe token to the topic AllUsers in the background
         asyncio.create_task(notification_helper.subscribe_topic(
-                                        [notification_token.token],
-                                        TopicEnum.AllARUsers))
+                                            [notification_token.token],
+                                            topic))
     return MessageSchema(info='Success')

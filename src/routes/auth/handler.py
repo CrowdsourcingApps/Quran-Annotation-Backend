@@ -5,7 +5,7 @@ from jose import JWTError
 
 from src.models import User
 from src.routes.auth.helper import auth_helper
-from src.routes.auth.schema import UserInSchema
+from src.routes.auth.schema import UserInSchema, language_to_topic_mapping
 from src.routes.notifications.handler import update_notification_token_user
 
 
@@ -122,3 +122,14 @@ async def update_user_language(
     if result == 0:
         return False
     return True
+
+
+async def get_user_language(user_id: int) -> str:
+    lang = await User.filter(id=user_id).only('language').first()
+    return lang.language
+
+
+async def get_user_topic(user_id: int) -> str:
+    lang = await get_user_language(user_id)
+    topic = language_to_topic_mapping.get(lang)
+    return topic
