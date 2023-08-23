@@ -11,7 +11,8 @@ from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
                                     UserInSchema, UserOutSchema, Anonymous,
-                                    langSchema, language_to_topic_mapping)
+                                    langSchema, language_to_topic_mapping,
+                                    AnonymouslangSchema)
 from src.routes.notifications.helper import notification_helper
 from src.settings import settings
 from src.settings.logging import logger
@@ -74,7 +75,7 @@ async def sign_up(form_data: UserInSchema, anonymous_id: int = None):
 
 
 @router.post(
-    '/anonumous',
+    '/register_anonumous',
     response_model=Anonymous,
     status_code=200,
     responses={400: {'description': 'BAD REQUEST'},
@@ -135,6 +136,40 @@ async def login_for_access_token(
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
+@router.post(
+    '/token/refresh',
+    response_model=Token,
+    status_code=200,
+    responses={401: {'description': 'UNAUTHORIZED'}},
+)
+async def refresh(refresh_token: str = Depends(auth_helper.oauth2_scheme)):
+    try:
+        useremail: str = auth_helper.decode_token(refresh_token)
+        user = await handler.get_user_by_email(useremail)
+        if user:
+            # Create and return token
+            access_token = auth_helper.create_access_token(useremail)
+            refresh_token = auth_helper.create_refresh_token(useremail)
+            return {
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'token_type': 'bearer',
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Could not validate credentials',
+                headers={'WWW-Authenticate': 'Bearer'},
+            )
+    except Exception as ex:
+        logger.exception(f'[token] - Decoding error: {ex}')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+    
+
 @router.get(
     '/me',
     response_model=UserOutSchema,
@@ -179,38 +214,42 @@ async def update_language(language: langSchema,
     return MessageSchema(info='success')
 
 
-@router.post(
-    '/token/refresh',
-    response_model=Token,
+@router.put(
+    '/language_anonymous',
+    response_model=MessageSchema,
     status_code=200,
-    responses={401: {'description': 'UNAUTHORIZED'}},
+    responses={400: {'description': 'BAD REQUEST'},
+               401: {'description': 'UNAUTHORIZED'}},
 )
-async def refresh(refresh_token: str = Depends(auth_helper.oauth2_scheme)):
-    try:
-        useremail: str = auth_helper.decode_token(refresh_token)
-        user = await handler.get_user_by_email(useremail)
-        if user:
-            # Create and return token
-            access_token = auth_helper.create_access_token(useremail)
-            refresh_token = auth_helper.create_refresh_token(useremail)
-            return {
-                'access_token': access_token,
-                'refresh_token': refresh_token,
-                'token_type': 'bearer',
-            }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Could not validate credentials',
-                headers={'WWW-Authenticate': 'Bearer'},
-            )
-    except Exception as ex:
-        logger.exception(f'[token] - Decoding error: {ex}')
+async def update_language_anonymous(anon_language: AnonymouslangSchema):
+    anonymous_user = await handler.get_user_by_id(anon_language.anonymous_id)
+    old_language = anonymous_user.language
+    new_language = anon_language.language
+    if old_language == new_language:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
-            headers={'WWW-Authenticate': 'Bearer'},
-        )
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='You have not changed the language')
+    result = await handler.update_user_language(anon_language.anonymous_id,
+                                                new_language)
+    if result is True:
+        # successfully update language
+        # Retrieve related notificationtokens
+        notification_tokens = await anonymous_user.notificationtokens.all()
+
+        # Extract token values from related objects
+        token_values = [token.token for token in notification_tokens]
+
+        if len(token_values) > 0:
+            # subscribe to different Topic
+            old_topic = language_to_topic_mapping.get(old_language)
+            new_topic = language_to_topic_mapping.get(new_language)
+            asyncio.create_task(
+                notification_helper.unsubscribe_subscribe_topic(
+                                                        old_topic,
+                                                        new_topic,
+                                                        token_values)
+            )
+    return MessageSchema(info='success')
 
 
 @router.post(

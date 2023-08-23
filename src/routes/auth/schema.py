@@ -50,3 +50,8 @@ class EmailMessageSchema(BaseModel):
 
 class langSchema(BaseModel):
     language: LanguageEnum
+
+
+class AnonymouslangSchema(BaseModel):
+    anonymous_id: int
+    language: LanguageEnum
