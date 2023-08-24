@@ -5,7 +5,8 @@ from jose import JWTError
 
 from src.models import User
 from src.routes.auth.helper import auth_helper
-from src.routes.auth.schema import UserInSchema, language_to_topic_mapping
+from src.routes.auth.schema import UserInSchema
+from src.routes.schema import language_to_topic_mapping
 from src.routes.notifications.handler import update_notification_token_user
 
 

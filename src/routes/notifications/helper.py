@@ -2,6 +2,10 @@ import json
 import asyncio
 from firebase_admin import messaging
 from src.settings.logging import logger
+from src.routes.notifications.handler import get_stale_tokens, delete_tokens
+from src.routes.schema import language_to_topic_mapping
+from collections import defaultdict
+
 
 MAX_RETRIES = 3
 
@@ -120,3 +124,28 @@ class NotificationHelper:
 
 
 notification_helper = NotificationHelper()
+
+
+async def check_and_delete_stale_token():
+    logger.info("check_and_delete_stolean_token method has been invoked")
+    # get steal_tokens
+    tokens = await get_stale_tokens()
+
+    if len(tokens) > 0:
+        # Create a defaultdict to store tokens by language
+        categorized_tokens = defaultdict(list)
+        # Categorize tokens based on user.language
+        for token in tokens:
+            language = token['language']
+            token = token['token']
+            categorized_tokens[language].append(token)
+
+        all_tokens = []
+        # unsubscribe the tokens from their topics
+        for language, tokens in categorized_tokens.items():
+            all_tokens.extend(tokens)
+            topic = language_to_topic_mapping.get(language)
+            await notification_helper.unsubscribe_topic(tokens, topic)
+
+        # delete stolen token
+        await delete_tokens(all_tokens)

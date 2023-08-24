@@ -11,9 +11,9 @@ from src.routes.auth import handler
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import (EmailMessageSchema, MessageSchema, Token,
                                     UserInSchema, UserOutSchema, Anonymous,
-                                    langSchema, language_to_topic_mapping,
-                                    AnonymouslangSchema)
+                                    langSchema, AnonymouslangSchema)
 from src.routes.notifications.helper import notification_helper
+from src.routes.schema import language_to_topic_mapping
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -168,7 +168,7 @@ async def refresh(refresh_token: str = Depends(auth_helper.oauth2_scheme)):
             detail='Could not validate credentials',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-    
+
 
 @router.get(
     '/me',
