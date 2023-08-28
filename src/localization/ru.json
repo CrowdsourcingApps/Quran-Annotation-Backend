@@ -2,5 +2,9 @@
     "achievement":{
         "title": "New achievement 🎉",
         "body":"We've reached {count} so far on {mission} 🚀"
+    },
+    "task_reminder":{
+        "title": "You still have time to contribute today 🤗",
+        "body":"Can you contribute to {mission} now 🥹"
     }
 }
