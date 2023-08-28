@@ -34,6 +34,7 @@ class NotificationHelper:
         return title, body
 
     async def subscribe_topic(self, tokens, topic):
+        # TODO Tokens should be here batch of 1000
         retries = 0
         while retries < MAX_RETRIES:
             response = messaging.subscribe_to_topic(tokens, topic)
@@ -49,6 +50,7 @@ class NotificationHelper:
         return
 
     async def unsubscribe_topic(self, tokens, topic):
+        # TODO Tokens should be here batch of 1000
         retries = 0
         while retries < MAX_RETRIES:
             response = messaging.unsubscribe_from_topic(tokens, topic)
@@ -92,23 +94,27 @@ class NotificationHelper:
 
     async def push_notification_tokens(self, title, body, tokens, link):
         retries = 0
+        max_tokens_per_batch = 500  # Maximum tokens per batch
         while retries < MAX_RETRIES:
             try:
-                message = messaging.MulticastMessage(
-                    notification=messaging.Notification(
-                        title=title,
-                        body=body
-                    ),
-                    webpush=messaging.WebpushConfig(
-                        fcm_options=messaging.WebpushFCMOptions(
-                            link=link
-                        )
-                    ),
-                    tokens=tokens
-                )
-                messaging.send_multicast(message)
+                for i in range(0, len(tokens), max_tokens_per_batch):
+                    batch_tokens = tokens[i:i + max_tokens_per_batch]
+                    message = messaging.MulticastMessage(
+                        notification=messaging.Notification(
+                            title=title,
+                            body=body
+                        ),
+                        webpush=messaging.WebpushConfig(
+                            fcm_options=messaging.WebpushFCMOptions(
+                                link=link
+                            )
+                        ),
+                        tokens=batch_tokens
+                    )
+                    messaging.send_multicast(message)
                 break
             except Exception as e:
+                # TODO handle exception correctly and remove invalid tokens
                 retries += 1
                 # Use 'await' for asynchronous sleep
                 await asyncio.sleep(2 ** retries)  # Exponential backoff
