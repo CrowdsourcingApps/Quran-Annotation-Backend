@@ -96,7 +96,7 @@ async def contribute_notification():
             token = token['token']
             categorized_tokens[language].append(token)
 
-        link = settings.FRONT_END + '/task/vc'
+        link = settings.FRONT_END + 'task/vc'
 
         # load message and send it for arab tokens
         variables = {

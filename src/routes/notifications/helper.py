@@ -93,12 +93,12 @@ class NotificationHelper:
         return
 
     async def push_notification_tokens(self, title, body, tokens, link):
-        retries = 0
         max_tokens_per_batch = 500  # Maximum tokens per batch
-        while retries < MAX_RETRIES:
-            try:
-                for i in range(0, len(tokens), max_tokens_per_batch):
-                    batch_tokens = tokens[i:i + max_tokens_per_batch]
+        for i in range(0, len(tokens), max_tokens_per_batch):
+            batch_tokens = tokens[i:i + max_tokens_per_batch]
+            retries = 0
+            while retries < MAX_RETRIES:
+                try:
                     message = messaging.MulticastMessage(
                         notification=messaging.Notification(
                             title=title,
@@ -111,16 +111,37 @@ class NotificationHelper:
                         ),
                         tokens=batch_tokens
                     )
-                    messaging.send_multicast(message)
-                break
-            except Exception as e:
-                # TODO handle exception correctly and remove invalid tokens
-                retries += 1
-                # Use 'await' for asynchronous sleep
-                await asyncio.sleep(2 ** retries)  # Exponential backoff
-                logger.error(
-                    f'Failed to send notification {title} to tokens {tokens}'
-                    f' due to {e}')
+                    response = messaging.send_multicast(message)
+                    if response.failure_count > 0:
+                        invalid_tokens = []
+                        for (index, response) in enumerate(response.responses):
+                            if not response.success:
+                                status_code = (
+                                    response.exception.
+                                    http_response.
+                                    status_code
+                                )
+                                if status_code == 400 or status_code == 404:
+                                    # UNREGISTERED  or INVALID_ARGUMENT
+                                    invalid_tokens.append(tokens[index])
+                                    pass
+                                else:
+                                    cause = response.exception.cause
+                                    logger.error(
+                                        f'Failed to send notification {title} '
+                                        'to tokens {} due to '
+                                        f'{status_code} {cause}')
+                        # delete tokens
+                        await delete_tokens(invalid_tokens)
+                    break
+                except Exception as e:
+                    # TODO handle exception correctly and remove invalid tokens
+                    retries += 1
+                    # Use 'await' for asynchronous sleep
+                    await asyncio.sleep(2 ** retries)  # Exponential backoff
+                    logger.error(
+                        f'Failed to send notification {title} '
+                        f'to tokens {batch_tokens} due to {e}')
         return
 
     async def unsubscribe_subscribe_topic(self, old_topic, new_topic, tokens):
