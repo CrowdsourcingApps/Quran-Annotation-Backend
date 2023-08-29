@@ -1,6 +1,6 @@
 import ast
 from datetime import date
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 from tortoise import Tortoise
 
@@ -122,12 +122,12 @@ async def get_contribution_by_date(user_id: int, date):
 
 
 async def get_users_tokens_with_no_contributions_today(
-        ) -> Tuple[str, str]:
+) -> Tuple[str, str]:
     today = date.today()
     date_str = today.strftime('%Y-%m-%d')
     query = f"""
         select u.language , t.token
-        FROM notificationtoken t 
+        FROM notificationtoken t
         LEFT JOIN "user" u
         ON u.id = t.user_id
         WHERE NOT EXISTS (
