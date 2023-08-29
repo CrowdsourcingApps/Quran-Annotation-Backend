@@ -34,35 +34,59 @@ class NotificationHelper:
         return title, body
 
     async def subscribe_topic(self, tokens, topic):
-        # TODO Tokens should be here batch of 1000
-        retries = 0
-        while retries < MAX_RETRIES:
-            response = messaging.subscribe_to_topic(tokens, topic)
-            if response.failure_count > 0:
-                retries += 1
-                # Use 'await' for asynchronous sleep
-                await asyncio.sleep(2 ** retries)  # Exponential backoff
-                logger.error(
-                    f'Failed to subscribe to topic {topic} due to'
-                    f' {list(map(lambda e: e.reason,response.errors))}')
-            else:
-                break
+        max_tokens_per_batch = 1000  # Maximum tokens per batch
+        for i in range(0, len(tokens), max_tokens_per_batch):
+            batch_tokens = tokens[i:i + max_tokens_per_batch]
+            retries = 0
+            while retries < MAX_RETRIES:
+                try:
+                    response = messaging.subscribe_to_topic(batch_tokens,
+                                                            topic)
+                    if response.failure_count > 0:
+                        invalid_tokens = []
+                        for (index, error) in enumerate(response.errors):
+                            if error.reason == 'INVALID_ARGUMENT':
+                                invalid_tokens.append(tokens[error.index])
+
+                        # delete bad tokens
+                        await delete_tokens(invalid_tokens)
+                    else:
+                        break
+                except Exception as e:
+                    retries += 1
+                    # Use 'await' for asynchronous sleep
+                    await asyncio.sleep(2 ** retries)  # Exponential backoff
+                    logger.error(
+                        f'Failed to subscribe {batch_tokens} to topic {topic}'
+                        f' due to {e}')
         return
 
     async def unsubscribe_topic(self, tokens, topic):
-        # TODO Tokens should be here batch of 1000
-        retries = 0
-        while retries < MAX_RETRIES:
-            response = messaging.unsubscribe_from_topic(tokens, topic)
-            if response.failure_count > 0:
-                retries += 1
-                # Use 'await' for asynchronous sleep
-                await asyncio.sleep(2 ** retries)  # Exponential backoff
-                logger.error(
-                    f'Failed to subscribe to topic {topic} due to'
-                    f' {list(map(lambda e: e.reason,response.errors))}')
-            else:
-                break
+        max_tokens_per_batch = 1000  # Maximum tokens per batch
+        for i in range(0, len(tokens), max_tokens_per_batch):
+            batch_tokens = tokens[i:i + max_tokens_per_batch]
+            retries = 0
+            while retries < MAX_RETRIES:
+                try:
+                    response = messaging.unsubscribe_from_topic(batch_tokens,
+                                                                topic)
+                    if response.failure_count > 0:
+                        invalid_tokens = []
+                        for (index, error) in enumerate(response.errors):
+                            if error.reason == 'INVALID_ARGUMENT':
+                                invalid_tokens.append(tokens[error.index])
+
+                        # delete bad tokens
+                        await delete_tokens(invalid_tokens)
+                    else:
+                        break
+                except Exception as e:
+                    retries += 1
+                    # Use 'await' for asynchronous sleep
+                    await asyncio.sleep(2 ** retries)  # Exponential backoff
+                    logger.error(
+                        f'Failed to unsubscribe {batch_tokens} to topic '
+                        f'{topic} due to {e}')
         return
 
     async def push_notification_topic(self, title, body, topic, link):
@@ -131,7 +155,7 @@ class NotificationHelper:
                                         f'Failed to send notification {title} '
                                         'to tokens {} due to '
                                         f'{status_code} {cause}')
-                        # delete tokens
+                        # delete bad tokens
                         await delete_tokens(invalid_tokens)
                     break
                 except Exception as e:
