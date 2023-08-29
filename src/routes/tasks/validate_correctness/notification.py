@@ -1,8 +1,9 @@
 from json import load, dump
+from collections import defaultdict
 from src.routes.notifications.helper import notification_helper
 from src.routes.notifications.schema import TopicEnum
 from src.routes.tasks.validate_correctness.handler \
-    import get_total_solved_tasks
+    import get_total_solved_tasks, get_users_tokens_with_no_contributions_today
 from src.settings import settings
 from src.settings.logging import logger
 
@@ -80,3 +81,58 @@ async def achievement_notification():
         # Write the updated data back to the JSON file
         with open(file_path, "w") as json_file:
             dump(target_achievements, json_file, indent=4)
+
+
+async def contribute_notification():
+    logger.info("vc_contribute_notification method has been invoked")
+    # get users who haven't contribute today with their language
+    tokens = await get_users_tokens_with_no_contributions_today()
+    if len(tokens) > 0:
+        # Create a defaultdict to store tokens by language
+        categorized_tokens = defaultdict(list)
+        # Categorize tokens based on user.language
+        for token in tokens:
+            language = token['language']
+            token = token['token']
+            categorized_tokens[language].append(token)
+
+        link = settings.FRONT_END + 'task/vc'
+
+        # load message and send it for arab tokens
+        variables = {
+                "mission": 'التحقق من النطق الصحيح للكلمات'
+            }
+        title, body = await notification_helper.get_localized_message(
+                                            lang_code='ar',
+                                            notification_key='task_reminder',
+                                            variables=variables
+                                        )
+        # send the notification message
+        await notification_helper.push_notification_tokens(
+                        title, body, categorized_tokens['ar'], link)
+
+        # load message and send it for en tokens
+        variables = {
+                "mission": 'Validate the correctness of word pronunciation'
+            }
+        title, body = await notification_helper.get_localized_message(
+                                            lang_code='en',
+                                            notification_key='task_reminder',
+                                            variables=variables
+                                        )
+        # send the notification message
+        await notification_helper.push_notification_tokens(
+                        title, body, categorized_tokens['en'], link)
+
+        # load message and send it for ru tokens
+        variables = {
+                "mission": 'Validate the correctness of word pronunciation'
+            }
+        title, body = await notification_helper.get_localized_message(
+                                            lang_code='ru',
+                                            notification_key='task_reminder',
+                                            variables=variables
+                                        )
+        # send the notification message
+        await notification_helper.push_notification_tokens(
+                        title, body, categorized_tokens['ru'], link)

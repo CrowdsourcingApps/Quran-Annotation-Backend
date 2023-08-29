@@ -6,6 +6,7 @@ from jose import JWTError
 from src.models import User
 from src.routes.auth.helper import auth_helper
 from src.routes.auth.schema import UserInSchema
+from src.routes.schema import language_to_topic_mapping
 from src.routes.notifications.handler import update_notification_token_user
 
 
@@ -77,6 +78,7 @@ async def transfare_anonymous(anonymous_id: int, user: UserInSchema) -> bool:
 
 async def remove_anonymous_account(anonymous_id: int, user_id: int) -> bool:
     # move tokens
+    # TODO Refactoring: Move update_notification_token_user
     await update_notification_token_user(anonymous_id, user_id)
 
     # delete anonymous account
@@ -112,3 +114,23 @@ async def update_user_validate_correctness_tasks_no(
     if result == 0:
         return False
     return True
+
+
+async def update_user_language(
+        user_id: int, lang: str) -> bool:
+    result = await User.filter(id=user_id).update(
+        language=lang)
+    if result == 0:
+        return False
+    return True
+
+
+async def get_user_language(user_id: int) -> str:
+    lang = await User.filter(id=user_id).only('language').first()
+    return lang.language
+
+
+async def get_user_topic(user_id: int) -> str:
+    lang = await get_user_language(user_id)
+    topic = language_to_topic_mapping.get(lang)
+    return topic

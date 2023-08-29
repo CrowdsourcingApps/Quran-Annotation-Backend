@@ -1,5 +1,6 @@
 import ast
-from typing import List, Union
+from datetime import date
+from typing import List, Tuple, Union
 
 from tortoise import Tortoise
 
@@ -118,3 +119,23 @@ async def get_contribution_by_date(user_id: int, date):
     result = await Tortoise.get_connection('default').execute_query_dict(query)
     count = result[0]['count']
     return count
+
+
+async def get_users_tokens_with_no_contributions_today(
+) -> Tuple[str, str]:
+    today = date.today()
+    date_str = today.strftime('%Y-%m-%d')
+    query = f"""
+        select u.language , t.token
+        FROM notificationtoken t
+        LEFT JOIN "user" u
+        ON u.id = t.user_id
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM validate_correctness_t_user vc
+            WHERE vc.user_id = u.id
+            AND DATE(create_date) = '{date_str}'
+        )
+    """
+    result = await Tortoise.get_connection('default').execute_query_dict(query)
+    return result

@@ -5,12 +5,14 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from src.database import init_db
 from src.routes import init_api
 from src.settings.logging import logger
 from src.routes.tasks.validate_correctness.notification \
-    import achievement_notification
+    import achievement_notification, contribute_notification
+from src.routes.notifications.helper import check_and_delete_stale_token
 
 app = FastAPI()
 
@@ -24,8 +26,16 @@ def get_scheduler():
 @app.on_event("startup")
 async def startup_event():
     scheduler = get_scheduler()
+
     trigger = CronTrigger(hour=12)  # Schedule job to run at midnight
     scheduler.add_job(achievement_notification, trigger=trigger)
+
+    # Set up the interval trigger for every 2 days
+    trigger = IntervalTrigger(days=2)
+    scheduler.add_job(check_and_delete_stale_token, trigger=trigger)
+
+    trigger = CronTrigger(hour=20)  # Schedule job to run at 8 PM
+    scheduler.add_job(contribute_notification, trigger=trigger)
 
 
 @app.middleware('http')

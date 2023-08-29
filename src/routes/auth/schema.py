@@ -1,7 +1,7 @@
 from pydantic import BaseModel, constr
 from tortoise.contrib.pydantic import pydantic_model_creator
 
-from src.models import User
+from src.models import User, LanguageEnum
 
 
 class Token(BaseModel):
@@ -39,3 +39,12 @@ class EmailMessageSchema(BaseModel):
     email: str
     name: str = None
     message: str
+
+
+class langSchema(BaseModel):
+    language: LanguageEnum
+
+
+class AnonymouslangSchema(BaseModel):
+    anonymous_id: int
+    language: LanguageEnum
