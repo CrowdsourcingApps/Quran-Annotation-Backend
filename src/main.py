@@ -1,18 +1,18 @@
 import secrets
 import time
 
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from src.database import init_db
 from src.routes import init_api
-from src.settings.logging import logger
-from src.routes.tasks.validate_correctness.notification \
-    import achievement_notification, contribute_notification
 from src.routes.notifications.helper import check_and_delete_stale_token
+from src.routes.tasks.validate_correctness.notification import (
+    achievement_notification, contribute_notification)
+from src.settings.logging import logger
 
 app = FastAPI()
 
@@ -23,7 +23,7 @@ def get_scheduler():
     return scheduler
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 async def startup_event():
     scheduler = get_scheduler()
 
@@ -57,9 +57,17 @@ async def log_requests(request, call_next):
                     f' status_code={response.status_code}')
     return response
 
+
+origins = [
+    'http://localhost',
+    'http://localhost:8000',
+    'http://www.quranvoice.live/',
+    'https://www.quranvoice.live/',
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
