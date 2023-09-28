@@ -93,6 +93,21 @@ async def add_validate_correctness_entrance_exam_answers(
     #         detail="Participant's answers should be equal to"
     #                f' {TASKS_In_BATCH_NO}',
     #     )
+
+    ps_questions = await handler.get_previous_solved_questions(user)
+    ps_questions_ids = [ps_question.id for ps_question in ps_questions]
+
+    questions_ids = [item.id for item in exam_answers
+                     if not item.control_task]
+
+    # Check if all elements of filtered_ids are in ps_questions_ids
+    repeated_request = all(id in ps_questions_ids for id in questions_ids)
+    if repeated_request:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='The request has already been sent',
+        )
+
     errors: List[CreationError] = []
     real_tasks_answers = [obj for obj in exam_answers if not obj.control_task]
     control_task_answer = [obj for obj in exam_answers if obj.control_task]
