@@ -57,17 +57,9 @@ async def log_requests(request, call_next):
                     f' status_code={response.status_code}')
     return response
 
-
-origins = [
-    'http://localhost',
-    'http://localhost:8000',
-    'http://www.quranvoice.live/',
-    'https://www.quranvoice.live/',
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],

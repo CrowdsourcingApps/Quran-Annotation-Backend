@@ -1,11 +1,13 @@
-import json
 import asyncio
-from firebase_admin import messaging
-from src.settings.logging import logger
-from src.routes.notifications.handler import get_stale_tokens, delete_tokens
-from src.routes.schema import language_to_topic_mapping
+import json
 from collections import defaultdict
 
+from firebase_admin import messaging
+
+from src.routes.notifications.handler import delete_tokens, get_stale_tokens
+from src.routes.schema import language_to_topic_mapping
+from src.settings import settings
+from src.settings.logging import logger
 
 MAX_RETRIES = 3
 
@@ -26,10 +28,10 @@ class NotificationHelper:
         notification = localization_data[notification_key]
         title = notification['title']
         body = (
-                notification['body'].format(**variables)
-                if variables
-                else notification['body']
-            )
+            notification['body'].format(**variables)
+            if variables
+            else notification['body']
+        )
 
         return title, body
 
@@ -96,7 +98,8 @@ class NotificationHelper:
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title=title,
-                        body=body
+                        body=body,
+                        image=settings.FRONT_END+'notification-icon.png'
                     ),
                     webpush=messaging.WebpushConfig(
                         fcm_options=messaging.WebpushFCMOptions(
@@ -126,7 +129,8 @@ class NotificationHelper:
                     message = messaging.MulticastMessage(
                         notification=messaging.Notification(
                             title=title,
-                            body=body
+                            body=body,
+                            image=settings.FRONT_END+'notification-icon.png'
                         ),
                         webpush=messaging.WebpushConfig(
                             fcm_options=messaging.WebpushFCMOptions(
@@ -178,7 +182,7 @@ notification_helper = NotificationHelper()
 
 
 async def check_and_delete_stale_token():
-    logger.info("check_and_delete_stolean_token method has been invoked")
+    logger.info('check_and_delete_stolean_token method has been invoked')
     # get steal_tokens
     tokens = await get_stale_tokens()
 
