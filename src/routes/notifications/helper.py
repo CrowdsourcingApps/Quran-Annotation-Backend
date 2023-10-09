@@ -6,7 +6,6 @@ from firebase_admin import messaging
 
 from src.routes.notifications.handler import delete_tokens, get_stale_tokens
 from src.routes.schema import language_to_topic_mapping
-from src.settings import settings
 from src.settings.logging import logger
 
 MAX_RETRIES = 3
@@ -96,16 +95,21 @@ class NotificationHelper:
         while retries < MAX_RETRIES:
             try:
                 message = messaging.Message(
-                    notification=messaging.Notification(
-                        title=title,
-                        body=body,
-                        image=settings.FRONT_END+'notification-icon.png'
-                    ),
-                    webpush=messaging.WebpushConfig(
-                        fcm_options=messaging.WebpushFCMOptions(
-                            link=link
-                        )
-                    ),
+                    # notification=messaging.Notification(
+                    #     title=title,
+                    #     body=body,
+                    #     image=settings.FRONT_END+'notification-icon.png'
+                    # ),
+                    # webpush=messaging.WebpushConfig(
+                    #     fcm_options=messaging.WebpushFCMOptions(
+                    #         link=link
+                    #     )
+                    # ),
+                    data={
+                        'title': title,
+                        'body': body,
+                        'link': link
+                    },
                     topic=topic
                 )
                 messaging.send(message)
@@ -127,16 +131,21 @@ class NotificationHelper:
             while retries < MAX_RETRIES:
                 try:
                     message = messaging.MulticastMessage(
-                        notification=messaging.Notification(
-                            title=title,
-                            body=body,
-                            image=settings.FRONT_END+'notification-icon.png'
-                        ),
-                        webpush=messaging.WebpushConfig(
-                            fcm_options=messaging.WebpushFCMOptions(
-                                link=link
-                            )
-                        ),
+                        # notification=messaging.Notification(
+                        #     title=title,
+                        #     body=body,
+                        #     image=settings.FRONT_END+'notification-icon.png'
+                        # ),
+                        # webpush=messaging.WebpushConfig(
+                        #     fcm_options=messaging.WebpushFCMOptions(
+                        #         link=link
+                        #     )
+                        # ),
+                        data={
+                            'title': title,
+                            'body': body,
+                            'link': link
+                        },
                         tokens=batch_tokens
                     )
                     response = messaging.send_multicast(message)
