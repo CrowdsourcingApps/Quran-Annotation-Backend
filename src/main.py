@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from src.database import init_db
+from src.firebase_config import initialize_firebase
 from src.routes import init_api
 from src.routes.notifications.helper import check_and_delete_stale_token
 from src.routes.tasks.validate_correctness.notification import (
@@ -15,6 +16,7 @@ from src.routes.tasks.validate_correctness.notification import (
 from src.settings.logging import logger
 
 app = FastAPI()
+initialize_firebase()
 
 
 def get_scheduler():
