@@ -109,6 +109,7 @@ class Task(Model):
     final_transcription = fields.TextField(null=True)
     label = fields.CharEnumField(LabelEnum, null=True)
     validated = fields.BooleanField(default=False)
+    label_transferred = fields.BooleanField(default=False)
 
 
 class ValidateCorrectnessTUser(Model):
