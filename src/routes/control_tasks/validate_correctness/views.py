@@ -8,9 +8,8 @@ from src.routes.auth.handler import (get_current_user,
                                      update_validate_correctness_exam_status)
 from src.routes.control_tasks.validate_correctness import handler
 from src.routes.control_tasks.validate_correctness.helper import (
-    calculate_validate_correctness_acc, convert_schema_list,
-    get_validate_correctness_entrance_exam_list, get_y_true_y_predict_user,
-    save_validate_control_tasks_list)
+    convert_schema_list, get_validate_correctness_entrance_exam_list,
+    get_vc_user_accuracy, save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
     TestResponse, UserPerformance, ValidateCorrectnessCTInSchema,
     ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
@@ -161,11 +160,7 @@ async def add_validate_correctness_entrance_exam_answers(
 async def get_user_accuracy(user: User = Depends(get_current_user)):
     """This method bring accuracy of the user regarding
        validate correctness tasks"""
-    y_true, y_pred = await get_y_true_y_predict_user(user=user)
-    if len(y_true) == 0:
-        acc = 0
-    else:
-        acc = await calculate_validate_correctness_acc(y_true, y_pred)
+    acc = await get_vc_user_accuracy(user=user)
     return UserPerformance(
         acc=acc*100
     )

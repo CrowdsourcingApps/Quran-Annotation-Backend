@@ -140,3 +140,13 @@ async def get_y_true_y_predict_user(user: User) -> Tuple[list, list]:
         y_true.append(task.label)
     y_pred = [task.label for task in control_tasks]
     return y_true, y_pred
+
+
+async def get_vc_user_accuracy(user: User) -> float:
+    """ Get user accuracy value between 0 and 1"""
+    y_true, y_pred = await get_y_true_y_predict_user(user=user)
+    if len(y_true) == 0:
+        acc = 0
+    else:
+        acc = await calculate_validate_correctness_acc(y_true, y_pred)
+    return acc

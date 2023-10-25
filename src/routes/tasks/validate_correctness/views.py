@@ -9,8 +9,8 @@ from src.routes.auth.handler import (get_current_user,
                                      update_user_validate_correctness_tasks_no)
 from src.routes.control_tasks.validate_correctness.handler import (
     get_previous_solved_questions, get_solved_control_tasks_by_date)
-from src.routes.control_tasks.validate_correctness.helper import \
-    save_validate_control_tasks_list
+from src.routes.control_tasks.validate_correctness.helper import (
+    get_vc_user_accuracy, save_validate_control_tasks_list)
 from src.routes.schema import CreateResponse, CreationError
 from src.routes.tasks.validate_correctness import handler, helper
 from src.routes.tasks.validate_correctness.schema import (
@@ -29,7 +29,8 @@ REAL_TASKS_NO = settings.REAL_TASKS_NO
             status_code=200,
             responses={401: {'description': 'UNAUTHORIZED'},
                        404: {'description': 'NOT FOUND'},
-                       400: {'description': 'BAD REQUEST'}
+                       400: {'description': 'BAD REQUEST'},
+                       403: {'description': 'FORBIDDEN'}
                        })
 async def get_validate_correctness_tasks(
         user: User = Depends(get_current_user)) -> list:
@@ -40,6 +41,13 @@ async def get_validate_correctness_tasks(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Participant should pass the entrance exam first',
+        )
+    # check that user accuracy is not less than 70%
+    user_acc = await get_vc_user_accuracy(user=user)
+    if user_acc < 0.7:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Participant accuracy less than 70%.',
         )
     # fetch N real tasks
     ps_questions = await handler.get_previous_solved_questions(user)
@@ -86,7 +94,7 @@ async def add_validate_correctness_entrance_exam_answers(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Participant should pass the entrance exam first',
         )
-    # comment this validation for the case of lettel number of tasks left
+    # comment this validation for the case of little number of tasks left
     # if len(exam_answers) != TASKS_In_BATCH_NO:
     #     raise HTTPException(
     #         status_code=status.HTTP_400_BAD_REQUEST,
