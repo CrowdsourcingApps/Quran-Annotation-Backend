@@ -27,29 +27,63 @@ async def get_validate_correctness_tasks(
     """ get validate correctness tasks"""
     # vctts = await Task.filter(id__not_in=skip_ids,
     #                          label=None).order_by('id').limit(limit).all()
-    priority_mapping = ast.literal_eval(settings.PRIORITY_MAPPING)
-
-    # Generate the CASE statement dynamically
-    case_statement = 'CASE '
-    for surra_number, priority in priority_mapping.items():
-        case_statement += f'WHEN surra_number = {surra_number}'
-        case_statement += f' THEN {priority} '
-    case_statement += 'END AS priority'
 
     # Convert skip_ids to a comma-separated string
     skip_ids_str = ','.join(str(id) for id in skip_ids)
 
     # Construct the SQL query
-    query = f"""
-    SELECT DISTINCT on (aya_number, priority)*, {case_statement}
+    begin_date = '2023-01-01'
+    query1 = f"""
+    SELECT
+        client_id AS first_client_id,
+        surra_number AS first_surra_number,
+        DATE(create_date) AS first_date
     FROM task
-    WHERE label is null
+    WHERE DATE(create_date) >= '{begin_date}'
+    And label is NULL
+    And client_id!= 'nurios'
     {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
-    ORDER BY priority,aya_number,surra_number , id
-    LIMIT {limit};
+    ORDER BY create_date
+    LIMIT 1
     """
-    vcts_dict = await Tortoise.get_connection('default').execute_query_dict(
-        query)
+    parameters = await Tortoise.get_connection('default').execute_query_dict(
+        query1)
+
+    query2 = f"""
+    SELECT *
+    FROM task
+    WHERE  DATE(create_date) = '{parameters[0]['first_date']}'
+    AND client_id = '{parameters[0]['first_client_id']}'
+    AND surra_number = {parameters[0]['first_surra_number']}
+    {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
+    And label is NULL
+    order by create_date
+    """
+    vcts_dict = await Tortoise.get_connection('default')\
+                              .execute_query_dict(query2)
+
+    if len(vcts_dict) == 0:
+        priority_mapping = ast.literal_eval(settings.PRIORITY_MAPPING)
+
+        # Generate the CASE statement dynamically
+        case_statement = 'CASE '
+        for surra_number, priority in priority_mapping.items():
+            case_statement += f'WHEN surra_number = {surra_number}'
+            case_statement += f' THEN {priority} '
+        case_statement += 'END AS priority'
+
+        # Construct the SQL query
+        query = f"""
+        SELECT DISTINCT on (aya_number, priority)*, {case_statement}
+        FROM task
+        WHERE label is null
+        {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
+        ORDER BY priority,aya_number,surra_number , id
+        LIMIT {limit};
+        """
+        vcts_dict = await Tortoise.get_connection('default')\
+                                  .execute_query_dict(query)
+
     vcts = [Task(**vct_dict) for vct_dict in vcts_dict]
     return vcts
 
