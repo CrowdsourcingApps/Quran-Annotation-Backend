@@ -80,6 +80,22 @@ class ValidateCorrectnessCT(Model):
                        ' have validate correctness type')
 
 
+class GoldenReasonValidateCorrectnessCT(Model):
+    validatecorrectnessct = fields.ForeignKeyField(
+        'models.ValidateCorrectnessCT')
+    reason_ar = fields.TextField(null=True,
+                                 description='The reason in Arabic')
+    reason_en = fields.TextField(null=True,
+                                 description='The reason in English')
+    reason_ru = fields.TextField(null=True,
+                                 description='The reason in Russian')
+
+    class Meta:
+        table = 'golden_reason_validate_correctness_ct'
+        description = ('The model is for reasoning about the labels of golden'
+                       ' control tasks that have validate correctness type')
+
+
 class ValidateCorrectnessCTUser(Model):
     validatecorrectnessct = fields.ForeignKeyField(
         'models.ValidateCorrectnessCT')
