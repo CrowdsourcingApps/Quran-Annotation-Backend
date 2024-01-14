@@ -32,7 +32,7 @@ async def get_validate_correctness_tasks(
     skip_ids_str = ','.join(str(id) for id in skip_ids)
 
     # Construct the SQL query
-    begin_date = '2023-01-01'
+    begin_date = '2024-01-14'
     query1 = f"""
     SELECT
         client_id AS first_client_id,
@@ -50,15 +50,17 @@ async def get_validate_correctness_tasks(
         query1)
 
     query2 = f"""
-    SELECT *
+    SELECT DISTINCT ON (aya_number)
+    *
     FROM task
     WHERE  DATE(create_date) = '{parameters[0]['first_date']}'
     AND client_id = '{parameters[0]['first_client_id']}'
     AND surra_number = {parameters[0]['first_surra_number']}
     {f"AND id NOT IN ({skip_ids_str})" if skip_ids_str else ""}
-    And label is NULL
-    order by create_date
+    AND label is NULL
+    ORDER BY aya_number, create_date;
     """
+
     vcts_dict = await Tortoise.get_connection('default')\
                               .execute_query_dict(query2)
 
