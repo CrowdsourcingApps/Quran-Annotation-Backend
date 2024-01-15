@@ -2,10 +2,10 @@ from typing import List, Union
 
 from tortoise import Tortoise
 
-from src.models import (LabelEnum, User, ValidateCorrectnessCT,
-                        ValidateCorrectnessCTUser)
-from src.routes.control_tasks.validate_correctness.schema import \
-    ValidateCorrectnessCTInSchema
+from src.models import (GoldenReasonValidateCorrectnessCT, LabelEnum, User,
+                        ValidateCorrectnessCT, ValidateCorrectnessCTUser)
+from src.routes.control_tasks.validate_correctness.schema import (
+    GoldenReasonVcCt, VCCTInSchema)
 from src.routes.schema import CreationError
 from src.settings.logging import logger
 
@@ -31,15 +31,19 @@ async def create_vcct(vcct: ValidateCorrectnessCT
 
 
 async def Add_validate_correctness_control_tasks_list(
-        list: List[ValidateCorrectnessCTInSchema]) -> List[CreationError]:
-    errors: List[CreationError] = []
+        list: List[VCCTInSchema]) -> List[CreationError]:
+    results: List[CreationError] = []
     for control_task in list:
         result = await create_vcct(control_task)
         if isinstance(result, str):
             error = CreationError(message=result,
                                   item=control_task.audio_file_name)
-            errors.append(error)
-    return errors
+            results.append(error)
+        else:
+            success = CreationError(message='Success',
+                                    item=result.id)
+            results.append(success)
+    return results
 
 
 async def get_previous_solved_questions(user: User) -> List[int]:
@@ -126,3 +130,21 @@ async def get_solved_control_tasks_by_date(user_id: int, date):
     result = await Tortoise.get_connection('default').execute_query_dict(query)
     count = result[0]['count']
     return count
+
+
+async def create_goldean_reason_vcct(
+    g_r_vcct: GoldenReasonVcCt
+) -> Union[GoldenReasonValidateCorrectnessCT, str]:
+    try:
+        g_r_vcct_obj = await GoldenReasonValidateCorrectnessCT.create(
+            validatecorrectnessct_id=g_r_vcct.validatecorrectnessct_id,
+            reason_ar=g_r_vcct.reason_ar,
+            reason_en=g_r_vcct.reason_en,
+            reason_ru=g_r_vcct.reason_ru,
+        )
+        return g_r_vcct_obj
+    except Exception as ex:
+        logger.exception('[db] - Add new golden reason vcct'
+                         f'item error: {ex}')
+        error_message = str(ex)
+        return error_message

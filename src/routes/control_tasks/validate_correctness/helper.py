@@ -9,11 +9,11 @@ from src.routes.control_tasks.validate_correctness.handler import (
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
-    ValidateCorrectnessCTInSchema as VCCTIn
-from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessCTOutSchema as VCCTOut
 from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessExamAnswers
+from src.routes.control_tasks.validate_correctness.schema import \
+    VCCTInSchema as VCCTIn
 from src.routes.schema import CreationError
 from src.settings import settings
 from src.settings.logging import logger
