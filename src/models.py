@@ -82,7 +82,7 @@ class ValidateCorrectnessCT(Model):
 
 class GoldenReasonValidateCorrectnessCT(Model):
     validatecorrectnessct = fields.ForeignKeyField(
-        'models.ValidateCorrectnessCT')
+        'models.ValidateCorrectnessCT', related_name='golden_reason')
     reason_ar = fields.TextField(null=True,
                                  description='The reason in Arabic')
     reason_en = fields.TextField(null=True,

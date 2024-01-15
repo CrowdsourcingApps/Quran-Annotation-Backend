@@ -13,8 +13,7 @@ from src.routes.control_tasks.validate_correctness.helper import (
     get_vc_user_accuracy, save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
     GoldenReasonVcCt, TestResponse, UserPerformance,
-    ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers,
-    VCCTInSchema)
+    ValidateCorrectnessExamAnswers, VCCTInSchema, VCCTOutSchema)
 from src.routes.schema import CreateResponse, CreationError
 
 router = APIRouter(prefix='/validate_correctness')
@@ -76,7 +75,7 @@ async def add_validate_correctness_control_tasks(
 
 
 @router.get('/',
-            response_model=List[ValidateCorrectnessCTOutSchema],
+            response_model=List[VCCTOutSchema],
             status_code=200,
             responses={401: {'description': 'UNAUTHORIZED'},
                        404: {'description': 'NOT FOUND'},

@@ -1,15 +1,9 @@
 from typing import List
 
 from pydantic import BaseModel
-from tortoise.contrib.pydantic import pydantic_model_creator
 
-from src.models import LabelEnum, ValidateCorrectnessCT
+from src.models import LabelEnum
 from src.routes.schema import CreationError
-
-# ValidateCorrectnessCTInSchema = pydantic_model_creator(
-#     ValidateCorrectnessCT,
-#     name='ValidateCorrectnessCTInSchema',
-#     exclude=['id', 'golden', 'create_date'])
 
 
 class VCCTInSchema(BaseModel):
@@ -24,10 +18,16 @@ class VCCTInSchema(BaseModel):
     reason_ru: str = None
 
 
-ValidateCorrectnessCTOutSchema = pydantic_model_creator(
-    ValidateCorrectnessCT,
-    name='ValidateCorrectnessCTOutSchema',
-    exclude=['golden', 'create_date', 'client_id'])
+class VCCTOutSchema(BaseModel):
+    id: int
+    surra_number: int
+    aya_number: int
+    audio_file_name: str
+    duration_ms: int
+    label: str
+    reason_ar: str = None
+    reason_en: str = None
+    reason_ru: str = None
 
 
 class ValidateCorrectnessExamAnswers(BaseModel):
