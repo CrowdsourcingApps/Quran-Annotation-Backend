@@ -1,4 +1,5 @@
 
+from copy import copy
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,8 +12,8 @@ from src.routes.control_tasks.validate_correctness.helper import (
     convert_schema_list, get_validate_correctness_entrance_exam_list,
     get_vc_user_accuracy, save_validate_control_tasks_list)
 from src.routes.control_tasks.validate_correctness.schema import (
-    TestResponse, UserPerformance, ValidateCorrectnessCTInSchema,
-    ValidateCorrectnessCTOutSchema, ValidateCorrectnessExamAnswers)
+    GoldenReasonVcCt, TestResponse, UserPerformance,
+    ValidateCorrectnessExamAnswers, VCCTInSchema, VCCTOutSchema)
 from src.routes.schema import CreateResponse, CreationError
 
 router = APIRouter(prefix='/validate_correctness')
@@ -28,22 +29,45 @@ VALIDATE_CORRECTNESS_THRESHOLD = 0.6
                         400: {'description': 'BAD REQUEST'},
                         403: {'description': 'Forbidden'}})
 async def add_validate_correctness_control_tasks(
-        control_tasks: List[ValidateCorrectnessCTInSchema],
+        control_tasks: List[VCCTInSchema],
         user: User = Depends(get_current_user)) -> list:
     """This method allows Admin to add list of control tasks related to
        validate correctness task type"""
     #  check that user is admin
     if user.user_role != UserRoleEnum.Admin:
         raise HTTPException(status_code=403, detail='you are not authorized')
+    control_tasks_input = copy(control_tasks)
     control_tasks = convert_schema_list(control_tasks)
-    result = await handler.Add_validate_correctness_control_tasks_list(
+    results = await handler.Add_validate_correctness_control_tasks_list(
         control_tasks)
-    if len(result) < len(control_tasks):
+    errors = []
+    for i in range(len(results)):
+        if (results[i].message == 'Success'
+           and
+           control_tasks_input[i].reason_ar is not None):
+            gr_vc_item = GoldenReasonVcCt(
+                validatecorrectnessct_id=int(results[i].item),
+                reason_ar=control_tasks_input[i].reason_ar,
+                reason_en=control_tasks_input[i].reason_en
+                if hasattr(control_tasks_input[i], 'reason_en') else None,
+                reason_ru=control_tasks_input[i].reason_ru
+                if hasattr(control_tasks_input[i], 'reason_ru') else None,
+            )
+            output = await handler.create_goldean_reason_vcct(gr_vc_item)
+            if isinstance(output, str):
+                error = CreationError(
+                    message='reason was not appended to vcct'
+                    f'{control_tasks_input[i].audio_file_name} successfully',
+                    item=results[i].item)
+                errors.append(error)
+        elif results[i].message != 'Success':
+            errors.append(results[i])
+    if len(errors) == 0:
         return CreateResponse(message='Data was uploaded successfully.',
-                              errors=result)
+                              errors=[])
     else:
         response = CreateResponse(message='Data was not uploaded successfully',
-                                  errors=result)
+                                  errors=errors)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=response.dict(),
@@ -51,7 +75,7 @@ async def add_validate_correctness_control_tasks(
 
 
 @router.get('/',
-            response_model=List[ValidateCorrectnessCTOutSchema],
+            response_model=List[VCCTOutSchema],
             status_code=200,
             responses={401: {'description': 'UNAUTHORIZED'},
                        404: {'description': 'NOT FOUND'},

@@ -9,11 +9,11 @@ from src.routes.control_tasks.validate_correctness.handler import (
     get_validate_correctness_control_task_by_id, get_validate_correctness_list,
     save_validate_correctness_control_task_answer)
 from src.routes.control_tasks.validate_correctness.schema import \
-    ValidateCorrectnessCTInSchema as VCCTIn
-from src.routes.control_tasks.validate_correctness.schema import \
-    ValidateCorrectnessCTOutSchema as VCCTOut
-from src.routes.control_tasks.validate_correctness.schema import \
     ValidateCorrectnessExamAnswers
+from src.routes.control_tasks.validate_correctness.schema import \
+    VCCTInSchema as VCCTIn
+from src.routes.control_tasks.validate_correctness.schema import \
+    VCCTOutSchema as VCCTOut
 from src.routes.schema import CreationError
 from src.settings import settings
 from src.settings.logging import logger
@@ -49,12 +49,22 @@ async def get_validate_correctness_entrance_exam_list(
         random.shuffle(test_questions)
         try:
             # add the whole path for the file name
+            tasks = []
             for i, obj in enumerate(test_questions):
-                test_questions[i].audio_file_name = (
-                    BUCKET_PATH + obj.audio_file_name
-                )
-            tasks = [await VCCTOut.from_tortoise_orm(task)
-                     for task in test_questions]
+                reason = await obj.golden_reason
+                tasks.append(VCCTOut(
+                    id=obj.id,
+                    surra_number=obj.surra_number,
+                    aya_number=obj.aya_number,
+                    audio_file_name=(
+                        BUCKET_PATH + obj.audio_file_name
+                    ),
+                    duration_ms=obj.duration_ms,
+                    label=obj.label,
+                    reason_ar=reason[0].reason_ar if len(reason) > 0 else None,
+                    reason_en=reason[0].reason_en if len(reason) > 0 else None,
+                    reason_ru=reason[0].reason_ru if len(reason) > 0 else None
+                ))
             return tasks
         except Exception as ex:
             logger.exception('Parsing VCCT list to'
