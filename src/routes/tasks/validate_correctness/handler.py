@@ -32,7 +32,7 @@ async def get_validate_correctness_tasks(
     skip_ids_str = ','.join(str(id) for id in skip_ids)
 
     # Construct the SQL query
-    begin_date = '2024-01-14'
+    begin_date = '2024-01-13'
     query1 = f"""
     SELECT
         client_id AS first_client_id,
